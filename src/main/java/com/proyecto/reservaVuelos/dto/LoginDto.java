@@ -1,0 +1,9 @@
+package com.proyecto.reservaVuelos.dto;
+
+import lombok.Data;
+
+@Data
+public class LoginDto {
+    private String username;
+    private String password;
+}
