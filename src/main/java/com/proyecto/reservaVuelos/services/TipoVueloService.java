@@ -47,7 +47,7 @@ public class TipoVueloService {
                     HttpStatusCode.valueOf(201)
             );
         }else{
-            throw new EntityNotFoundException("el tipo de vuelo no se encuentra registrada", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("el tipo de vuelo no se encuentra registrada");
         }
     }
 
@@ -63,7 +63,7 @@ public class TipoVueloService {
                     HttpStatusCode.valueOf(204)
             );
         }else{
-            throw new EntityNotFoundException("El vuelo no se encuantra programado", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("El vuelo no se encuantra programado");
         }
     }
 }

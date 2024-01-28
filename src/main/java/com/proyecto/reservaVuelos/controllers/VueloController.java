@@ -80,7 +80,7 @@ public class VueloController {
                             schema = @Schema(implementation = VueloModel.class))})
     })
     @CrossOrigin(origins = "http://localhost:5173")
-    @PostMapping(path = "/vuelo", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "vuelo", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> crearVuelo(@RequestBody @Valid VueloModel vuelo){
         return this.vueloService.crearVuelo(vuelo);
     }
@@ -93,7 +93,7 @@ public class VueloController {
     @Operation(summary = "actualizar o modificar un vuelo")
     @CrossOrigin(origins = "http://localhost:5173")
     @PutMapping(path="vuelo/{idVuelo}")
-    public ResponseEntity<Object> actualizarVuelo(@PathVariable("idVuelo") Long idVuelo, @RequestBody VueloModel editVuelo) throws EntityNotFoundException {
+    public ResponseEntity<Object> actualizarVuelo(@PathVariable("idVuelo") Long idVuelo, @RequestBody @Valid VueloModel editVuelo) throws EntityNotFoundException {
         return this.vueloService.actualizarVuelo(idVuelo, editVuelo);
     }
 
@@ -109,4 +109,10 @@ public class VueloController {
     public ResponseEntity<Object> eliminarVueloPorId(@PathVariable("idVuelo") Long idVuelo) throws EntityNotFoundException {
         return this.vueloService.eliminarVueloPorId(idVuelo);
     }
+
+    @GetMapping(path = "{num}")
+    public ResponseEntity<Object> actualizarFechasVuelos(@PathVariable int num){
+        return this.vueloService.actualizarFechasVuelos(num);
+    }
+
 }

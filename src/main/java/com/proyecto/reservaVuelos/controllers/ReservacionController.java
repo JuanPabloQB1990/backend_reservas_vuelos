@@ -47,6 +47,7 @@ public class ReservacionController {
             @ApiResponse(responseCode = "406", description = "La reserva debe realizarse con al menos 3 horas de anticipación.",
                     content = @Content)})
     @PostMapping(path = "/reservacion")
+    @CrossOrigin(origins = "http://localhost:5173")
     public ResponseEntity<Object> crearReservacion(@RequestBody CrearReservaDto reserva) throws EntityNotFoundException {
         return reservacionService.crearReservacion(reserva);
     }

@@ -38,7 +38,7 @@ public class ClienteService {
     public ResponseEntity<Object> registrarCliente(ClienteModel cliente) throws EntityNotFoundException {
 
         if (clienteRepository.existsByUsername(cliente.getUsername())){
-            throw new EntityNotFoundException("Este cliente ya se encuentra registrado", HttpStatus.BAD_REQUEST);
+            throw new EntityNotFoundException("Este cliente ya se encuentra registrado");
         }
 
         ClienteModel clienteRegistrado = new ClienteModel();
@@ -67,10 +67,10 @@ public class ClienteService {
             authenticationManager.authenticate(userNamePassword);
             UserDetails user = clienteRepository.findByUsername(loginDto.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User with username " + loginDto.getUsername() + " not found"));
             String token = jwtService.getToken(user);
-            return new ResponseEntity<>(new AuthRespuestaDto(token, cliente.get().getRol()), HttpStatus.OK);
+            return new ResponseEntity<>(new AuthRespuestaDto(token, cliente.get().getRol(), cliente.get().getIdCliente()), HttpStatus.OK);
         }
 
-        throw new EntityNotFoundException("el usuario no se encuentra registrado", HttpStatusCode.valueOf(404));
+        throw new EntityNotFoundException("el usuario no se encuentra registrado");
 
     }
 }

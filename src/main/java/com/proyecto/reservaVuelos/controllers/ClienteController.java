@@ -25,7 +25,7 @@ public class ClienteController {
 
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping(value = "login")
-    public ResponseEntity<AuthRespuestaDto> loguearCliente(@RequestBody LoginDto loginDto) throws EntityNotFoundException {
+    public ResponseEntity<AuthRespuestaDto> loguearCliente(@RequestBody @Valid LoginDto loginDto) throws EntityNotFoundException {
         return this.clienteService.loguearCliente(loginDto);
     }
 

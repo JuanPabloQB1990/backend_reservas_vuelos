@@ -1,6 +1,7 @@
 package com.proyecto.reservaVuelos.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ public class AerolineaModel {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long idAerolinea;
 
+    @NotEmpty(message = "el nombre de la aerolinea es requerido")
     private String nombre;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "aerolinea", cascade = CascadeType.ALL)

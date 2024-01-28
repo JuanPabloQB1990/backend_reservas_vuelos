@@ -28,7 +28,7 @@ public class ClienteModel implements UserDetails {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long idCliente;
 
-    @NotBlank(message = "nombre requerido")
+    @NotEmpty(message = "nombre requerido")
     private String nombre;
 
     @NotEmpty(message = "apellido requerido")

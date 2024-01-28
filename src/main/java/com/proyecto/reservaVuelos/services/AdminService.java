@@ -49,6 +49,6 @@ public class AdminService {
             return new ResponseEntity<>(respuesta, HttpStatus.OK);
         }
 
-        throw new EntityNotFoundException("el usuario no esta registrado", HttpStatus.NOT_FOUND);
+        throw new EntityNotFoundException("el usuario no esta registrado");
     }
 }

@@ -47,7 +47,7 @@ public class AerolineaService {
                     HttpStatusCode.valueOf(201)
             );
         }else{
-            throw new EntityNotFoundException("la aerolinea no se encuentra registrada", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("la aerolinea no se encuentra registrada");
         }
     }
 
@@ -63,7 +63,7 @@ public class AerolineaService {
                     HttpStatusCode.valueOf(204)
             );
         }else{
-            throw new EntityNotFoundException("El vuelo no se encuantra programado",HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("El vuelo no se encuantra programado");
         }
     }
 }

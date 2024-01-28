@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -35,21 +36,10 @@ public class VueloService {
         Optional<VueloModel> vueloEncontrado = this.vueloRepository.findById(idVuelo);
 
         if(vueloEncontrado.isPresent()){
-            return VueloModelDto.build(
-                    vueloEncontrado.get().getIdVuelo(),
-                    vueloEncontrado.get().getCodigoVuelo(),
-                    vueloEncontrado.get().getOrigen(),
-                    vueloEncontrado.get().getDestino(),
-                    vueloEncontrado.get().getFechaPartida(),
-                    vueloEncontrado.get().getFechaLlegada(),
-                    vueloEncontrado.get().getPrecio(),
-                    vueloEncontrado.get().getAsientos(),
-                    vueloEncontrado.get().getTipoVuelo().getNombre(),
-                    vueloEncontrado.get().getAerolinea().getNombre()
-            );
+            return vueloMapper.toVueloDto(vueloEncontrado.get());
 
         }else{
-            throw new EntityNotFoundException("Vuelo no encontrado", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("Vuelo no encontrado");
         }
     }
 
@@ -63,7 +53,7 @@ public class VueloService {
 
             return vuelosDto;
         }else{
-            throw new EntityNotFoundException("no hay vuelos programados", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("no hay vuelos programados");
         }
 
     }
@@ -142,7 +132,7 @@ public class VueloService {
         if (!escalas.isEmpty()){
             return escalas;
         }else {
-            throw new EntityNotFoundException("no hay vuelos programados", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("no hay vuelos programados");
         }
     }
 
@@ -224,7 +214,7 @@ public class VueloService {
         if (!escalas.isEmpty()){
             return escalas;
         }else {
-            throw new EntityNotFoundException("no hay vuelos programados", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("no hay vuelos programados");
         }
 
     }
@@ -258,7 +248,6 @@ public class VueloService {
 
         if (vueloEncontrado.isPresent()){
             if (editVuelo.getAerolinea().getIdAerolinea() == vueloEncontrado.get().getAerolinea().getIdAerolinea()){
-                vueloEncontrado.get().setCodigoVuelo(editVuelo.getCodigoVuelo());
                 vueloEncontrado.get().setOrigen(editVuelo.getOrigen());
                 vueloEncontrado.get().setDestino(editVuelo.getDestino());
                 vueloEncontrado.get().setFechaPartida(editVuelo.getFechaPartida());
@@ -288,7 +277,7 @@ public class VueloService {
                     HttpStatus.OK
             );
         }else{
-            throw new EntityNotFoundException("el vuelo no se encuentra registrado", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("el vuelo no se encuentra registrado");
         }
     }
 
@@ -304,11 +293,27 @@ public class VueloService {
                     HttpStatusCode.valueOf(204)
             );
         }else{
-            throw new EntityNotFoundException("El vuelo no se encuantra programado", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("El vuelo no se encuantra programado");
         }
 
     }
 
+    public ResponseEntity<Object> actualizarFechasVuelos(int num) {
+        List<VueloModel> vuelos = this.vueloRepository.findAll();
+
+        for (VueloModel vuelo :vuelos) {
+            LocalDateTime fechaPartidaConUnMesMas = vuelo.getFechaPartida().plusMonths(num);
+            LocalDateTime fechaLlegadaConUnMesMas = vuelo.getFechaLlegada().plusMonths(num);
+            vuelo.setFechaPartida(fechaPartidaConUnMesMas);
+            vuelo.setFechaLlegada(fechaLlegadaConUnMesMas);
+            this.vueloRepository.save(vuelo);
+        }
+
+
+        return ResponseEntity.accepted().body("vuelos actualizados");
+
+
+    }
 
 
 }

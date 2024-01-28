@@ -4,10 +4,7 @@ import org.springframework.http.HttpStatusCode;
 
 public class EntityNotFoundException extends Exception{
 
-    private HttpStatusCode code;
-
-    public EntityNotFoundException(String message, HttpStatusCode code) {
+    public EntityNotFoundException(String message) {
         super(message);
-        this.code = code;
     }
 }

@@ -51,11 +51,12 @@ public class ReservacionService {
     double total = 0;
 
     public ResponseEntity<Object> crearReservacion(CrearReservaDto reserva) throws EntityNotFoundException {
-
+        listaVuelos.clear();
+        total = 0;
         Optional<VueloModel> primerVuelo = vueloRepository.findById(reserva.getIdVuelo1());
 
         if (primerVuelo.get().getFechaPartida().minusHours(3).isBefore(LocalDateTime.now())){
-            throw new EntityNotFoundException("La reserva debe realizarse con al menos 3 horas de anticipación.",HttpStatusCode.valueOf(406));
+            throw new EntityNotFoundException("La reserva debe realizarse con al menos 3 horas de anticipación.");
 
         }else{
             pasajero = this.clienteRepository.findById(reserva.getIdCliente());
@@ -90,12 +91,12 @@ public class ReservacionService {
                         vueloService.actualizarVuelo(vuelo.get().getIdVuelo(), vuelo.get());
 
                     } else {
-                        throw new EntityNotFoundException("No hay suficientes asientos disponibles para el vuelo", HttpStatusCode.valueOf(406));
+                        throw new EntityNotFoundException("No hay suficientes asientos disponibles para el vuelo");
                     }
 
                 }
             }else{
-                throw new EntityNotFoundException("el cliente no esta registrado",HttpStatusCode.valueOf(404));
+                throw new EntityNotFoundException("el cliente no esta registrado");
 
             }
         }
@@ -199,13 +200,13 @@ public class ReservacionService {
                         HttpStatus.OK
                 );
             }else{
-                throw new EntityNotFoundException("el usuario no esta registrado", HttpStatusCode.valueOf(404));
+                throw new EntityNotFoundException("el usuario no esta registrado");
 
             }
 
         }
 
-        throw new EntityNotFoundException("No se encontraron reservaciones para eliminar", HttpStatusCode.valueOf(404));
+        throw new EntityNotFoundException("No se encontraron reservaciones para eliminar");
 
     }
 
@@ -224,9 +225,9 @@ public class ReservacionService {
                 return listaReservaciones;
             }
 
-            throw new EntityNotFoundException("El cliente no tiene reservaciones", HttpStatusCode.valueOf(404));
+            throw new EntityNotFoundException("El cliente no tiene reservaciones");
         }
-        throw new EntityNotFoundException("El cliente no esta registrado", HttpStatusCode.valueOf(401));
+        throw new EntityNotFoundException("El cliente no esta registrado");
 
     }
 

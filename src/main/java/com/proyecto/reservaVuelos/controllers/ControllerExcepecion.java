@@ -14,7 +14,7 @@ import java.util.Map;
 public class ControllerExcepecion {
     Map<String, String> errorMap;
 
-    //@ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
     public Map<String, String> handleUserNotFoundExcepcion(EntityNotFoundException unfe){
         errorMap = new HashMap<>();

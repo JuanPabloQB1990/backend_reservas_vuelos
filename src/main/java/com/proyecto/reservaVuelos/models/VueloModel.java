@@ -2,8 +2,7 @@ package com.proyecto.reservaVuelos.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -23,21 +22,24 @@ public class VueloModel {
 
     private String codigoVuelo;
 
-    @NotNull(message = "el origen del vuelo es obligatorio")
+    @NotEmpty(message = "el origen del vuelo es obligatorio")
     private String origen;
 
-    @NotNull(message = "el destino del vuelo es obligatorio")
+    @NotEmpty(message = "el destino del vuelo es obligatorio")
     private String destino;
 
+    @Future
     @NotNull(message = "la fecha de partida del vuelo es obligatorio")
     private LocalDateTime fechaPartida;
 
+    @Future
     @NotNull(message = "la fecha de llegada del vuelo es obligatorio")
     private LocalDateTime fechaLlegada;
 
+    @Min(value = 1, message = "el precio del vuelo debe ser saldo positivo")
     private double precio;
 
-    @Min(20)
+    @Min(value = 1, message = "los asientos deben ser mayor a 0")
     private int asientos;
 
     @ManyToOne(fetch = FetchType.EAGER)
