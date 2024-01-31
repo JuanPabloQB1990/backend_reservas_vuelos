@@ -167,7 +167,7 @@ public class VueloService {
             if (!segundoVueloUnaEscala.isEmpty()){
 
                 for (VueloModel segundoVuelo: segundoVueloUnaEscala) {
-                    if (segundoVuelo.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada())){
+                    if (segundoVuelo.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada()) && !segundoVuelo.getFechaPartida().minusHours(12).isAfter(primerVuelo.getFechaLlegada())){
 
                         listaVuelos.add(vueloMapper.toVueloDto(primerVuelo));
                         listaVuelos.add(vueloMapper.toVueloDto(segundoVuelo));
@@ -193,7 +193,7 @@ public class VueloService {
 
                         for (VueloModel vueloIntermedio :vuelosIntermedios) {
 
-                            if (vueloTercero.getFechaPartida().minusHours(1).isAfter(vueloIntermedio.getFechaLlegada()) && vueloIntermedio.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada())){
+                            if (vueloTercero.getFechaPartida().minusHours(1).isAfter(vueloIntermedio.getFechaLlegada()) && !vueloTercero.getFechaPartida().minusHours(12).isAfter(vueloIntermedio.getFechaLlegada()) && vueloIntermedio.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada()) && !vueloIntermedio.getFechaPartida().minusHours(12).isAfter(primerVuelo.getFechaLlegada())){
 
                                 listaVuelos.add(vueloMapper.toVueloDto(primerVuelo));
                                 listaVuelos.add(vueloMapper.toVueloDto(vueloIntermedio));
@@ -221,18 +221,75 @@ public class VueloService {
 
     public ResponseEntity<Object> crearVuelo(VueloModel vuelo){
 
-        this.vueloRepository.crearVuelo(
-                vuelo.getOrigen(),
-                vuelo.getDestino(),
-                vuelo.getFechaPartida(),
-                vuelo.getFechaLlegada(),
-                vuelo.getPrecio(),
-                vuelo.getAsientos(),
-                vuelo.getTipoVuelo().getIdTipoVuelo(),
-                vuelo.getAerolinea().getIdAerolinea());
+        for (int i = 0; i <= 29; i+=5) {
+
+            if (i == 0){
+                for (int j = 1; j < 7; j+=5) {
+                    if (j == 1){
+                        this.vueloRepository.crearVuelo(
+                                vuelo.getOrigen(),
+                                vuelo.getDestino(),
+                                vuelo.getFechaPartida(),
+                                vuelo.getFechaLlegada(),
+                                vuelo.getPrecio(),
+                                vuelo.getAsientos(),
+                                vuelo.getTipoVuelo().getIdTipoVuelo(),
+                                vuelo.getAerolinea().getIdAerolinea());
+                    }else{
+                        LocalDateTime fechaPartidaConUnaHoraMas = vuelo.getFechaPartida().plusHours(j);
+                        LocalDateTime fechaLlegadaConUnaHoraMas = vuelo.getFechaLlegada().plusHours(j);
+
+                        this.vueloRepository.crearVuelo(
+                                vuelo.getOrigen(),
+                                vuelo.getDestino(),
+                                fechaPartidaConUnaHoraMas,
+                                fechaLlegadaConUnaHoraMas,
+                                vuelo.getPrecio(),
+                                vuelo.getAsientos(),
+                                vuelo.getTipoVuelo().getIdTipoVuelo(),
+                                vuelo.getAerolinea().getIdAerolinea());
+                    }
+                }
+
+            }else{
+
+                LocalDateTime fechaPartidaConUnDiaMas = vuelo.getFechaPartida().plusDays(i);
+                LocalDateTime fechaLlegadaConUnDiaMas = vuelo.getFechaLlegada().plusDays(i);
+
+                for (int j = 1; j < 7; j+=5) {
+                    if (j==1){
+                        this.vueloRepository.crearVuelo(
+                                vuelo.getOrigen(),
+                                vuelo.getDestino(),
+                                fechaPartidaConUnDiaMas,
+                                fechaLlegadaConUnDiaMas,
+                                vuelo.getPrecio(),
+                                vuelo.getAsientos(),
+                                vuelo.getTipoVuelo().getIdTipoVuelo(),
+                                vuelo.getAerolinea().getIdAerolinea());
+                    }else{
+                        LocalDateTime fechaPartidaConUnaHoraMas = fechaLlegadaConUnDiaMas.plusHours(j);
+                        LocalDateTime fechaLlegadaConUnaHoraMas = fechaLlegadaConUnDiaMas.plusHours(j);
+
+                        this.vueloRepository.crearVuelo(
+                                vuelo.getOrigen(),
+                                vuelo.getDestino(),
+                                fechaPartidaConUnaHoraMas,
+                                fechaLlegadaConUnaHoraMas,
+                                vuelo.getPrecio(),
+                                vuelo.getAsientos(),
+                                vuelo.getTipoVuelo().getIdTipoVuelo(),
+                                vuelo.getAerolinea().getIdAerolinea());
+                    }
+
+                }
+
+            }
+
+        }
 
         datos = new HashMap<>();
-        datos.put("message", "el vuelo se guardo con exito");
+        datos.put("message", "los vuelos se guardaron con exito");
 
         return new ResponseEntity<>(
                 datos,

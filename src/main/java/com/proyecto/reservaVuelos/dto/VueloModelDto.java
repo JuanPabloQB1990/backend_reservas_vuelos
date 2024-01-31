@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class VueloModelDto {
 
     private Long idVuelo;
+
     private String codVuelo;
 
     private String origen;

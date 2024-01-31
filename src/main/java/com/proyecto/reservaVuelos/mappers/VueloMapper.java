@@ -12,6 +12,7 @@ import org.mapstruct.factory.Mappers;
 public interface VueloMapper{
 
     @Mappings({
+            @Mapping(source = "codigoVuelo", target = "codVuelo"),
             @Mapping(source = "tipoVuelo.nombre", target = "tipoVuelo"),
             @Mapping(source = "aerolinea.nombre", target = "aerolinea")
 

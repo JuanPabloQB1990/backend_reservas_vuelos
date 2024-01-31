@@ -23,9 +23,9 @@ import java.util.Optional;
 @RestController
 @RequestMapping("api/reservaciones")
 @Tag(name = "Reservacion", description = "Catálogo de reservaciones")
+@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE})
 //@Api(value = "Usuarios", description = "Endpoints entidad Reserva")
 public class ReservacionController {
-
 
     private ReservacionService reservacionService;
     private VueloService vueloService;

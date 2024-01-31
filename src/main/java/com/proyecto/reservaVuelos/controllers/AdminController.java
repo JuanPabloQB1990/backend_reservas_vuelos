@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "api/admin")
+@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET})
 @Tag(name = "administrador", description = "Catálogo para administrar roles de usuario")
 public class AdminController {
 

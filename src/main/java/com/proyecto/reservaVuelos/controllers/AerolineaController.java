@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "api/aerolineas")
-//@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET})
+@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET})
 @Tag(name = "Aerolinea", description = "Catálogo de aerolineas")
 public class AerolineaController {
     private AerolineaService aerolineaService;

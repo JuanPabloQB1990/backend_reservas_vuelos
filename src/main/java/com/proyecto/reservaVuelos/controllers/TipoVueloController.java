@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "api/tipo_vuelos")
-//@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET})
+@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET})
 @Tag(name = "Tipo de Vuelos", description = "Catálogo de tipo de vuelos")
 public class TipoVueloController {
 
