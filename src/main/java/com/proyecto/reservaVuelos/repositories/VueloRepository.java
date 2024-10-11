@@ -16,6 +16,7 @@ import java.util.Optional;
 
 public interface VueloRepository extends JpaRepository<VueloModel, Long> {
 
+
     @Transactional
     @Modifying
     @Query(value = "{call update_vuelo(:idVuelo, :origen, :destino, :fechaPartida, :fechaLlegada, :precio, :asientos, :idTipoVuelo, :idAerolinea)}", nativeQuery = true)

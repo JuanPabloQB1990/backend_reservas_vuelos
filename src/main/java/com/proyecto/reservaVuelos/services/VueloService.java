@@ -33,18 +33,19 @@ public class VueloService {
     private HashMap<String, Object> datos;
 
     public VueloModelDto obtenerVueloPorId(Long idVuelo) throws EntityNotFoundException {
+
         Optional<VueloModel> vueloEncontrado = this.vueloRepository.findById(idVuelo);
 
         if(vueloEncontrado.isPresent()){
-            return vueloMapper.toVueloDto(vueloEncontrado.get());
-
+            VueloModelDto vuelo = vueloMapper.toVueloDto(vueloEncontrado.get());
+            return vuelo;
         }else{
             throw new EntityNotFoundException("Vuelo no encontrado");
         }
     }
 
     public Page<VueloModelDto> obtenerTodosLosVuelos(Pageable pageable) throws EntityNotFoundException {
-
+        System.out.println(pageable);
         Page<VueloModel> vuelos = this.vueloRepository.findAll(pageable);
 
         if (vuelos.getTotalElements() > 0){
@@ -342,9 +343,10 @@ public class VueloService {
         Optional<VueloModel> vueloEncontrado = this.vueloRepository.findById(idVuelo);
 
         if (vueloEncontrado.isPresent()) {
-            this.vueloRepository.deleteById(idVuelo);
+            this.vueloRepository.deleteById(vueloEncontrado.get().getIdVuelo());
             datos = new HashMap<>();
             datos.put("message", "el vuelo se elimino con exito");
+            datos.put("status", HttpStatusCode.valueOf(204));
             return new ResponseEntity<>(
                     datos,
                     HttpStatusCode.valueOf(204)
@@ -366,9 +368,7 @@ public class VueloService {
             this.vueloRepository.save(vuelo);
         }
 
-
         return ResponseEntity.accepted().body("vuelos actualizados");
-
 
     }
 

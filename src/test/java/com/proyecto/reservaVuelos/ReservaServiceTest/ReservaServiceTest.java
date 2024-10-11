@@ -2,6 +2,8 @@ package com.proyecto.reservaVuelos.ReservaServiceTest;
 
 import com.proyecto.reservaVuelos.dto.CrearReservaDto;
 import com.proyecto.reservaVuelos.excepcion.EntityNotFoundException;
+import com.proyecto.reservaVuelos.mappers.ClienteMapper;
+import com.proyecto.reservaVuelos.mappers.VueloMapper;
 import com.proyecto.reservaVuelos.models.*;
 import com.proyecto.reservaVuelos.repositories.ClienteRepository;
 import com.proyecto.reservaVuelos.repositories.ReservacionRepository;
@@ -30,6 +32,8 @@ public class ReservaServiceTest {
     private ClienteRepository clienteRepository;
     private VueloService vueloService;
     private ReservacionService reservacionService;
+    private VueloMapper vueloMapper;
+    private ClienteMapper clienteMapper;
 
     LocalDateTime fechaSalida;
     LocalDateTime fechaLlegada;
@@ -48,7 +52,10 @@ public class ReservaServiceTest {
         this.reservacionRepository = mock(ReservacionRepository.class);
         this.vueloRepository = mock(VueloRepository.class);
         this.vueloService = mock(VueloService.class);
-        this.reservacionService = new ReservacionService(this.reservacionRepository,this.vueloRepository,this.clienteRepository,this.vueloService);
+        this.vueloMapper = mock(VueloMapper.class);
+        this.clienteMapper = mock(ClienteMapper.class);
+
+        this.reservacionService = new ReservacionService(this.reservacionRepository,this.vueloRepository,this.clienteRepository,this.vueloService,this.vueloMapper,this.clienteMapper);
         fechaSalida = LocalDateTime.now().plusHours(4);
         fechaLlegada = LocalDateTime.now().plusHours(5);
         tipoVuelo = new TipoVueloModel(1L, "PUBLICO");

@@ -31,11 +31,10 @@ public class VueloServiceTest {
     @Mock
     private VueloRepository vueloRepository;
 
-    @Mock
-    private VueloMapper vueloMapper;
-
     @InjectMocks
     private VueloService vueloService;
+    private VueloMapper vueloMapper;
+
 
     private TipoVueloModel tipoVuelo;
     private AerolineaModel aerolinea;
@@ -48,11 +47,14 @@ public class VueloServiceTest {
     private VueloModel vuelo5;
     private VueloModel vuelo6;
     private VueloModel vuelo7;
+    private VueloModelDto vuelo8;
 
     @BeforeEach
     public void config(){
-        MockitoAnnotations.initMocks(this);
-        tipoVuelo = new TipoVueloModel(1L, "Economica");
+        this.vueloMapper = mock(VueloMapper.class);
+        MockitoAnnotations.openMocks(this);
+        this.vueloService = new VueloService(this.vueloRepository, this.vueloMapper);
+        tipoVuelo = new TipoVueloModel(1L, "Publico");
         aerolinea = new AerolineaModel(1L, "Avianca");
         vuelo1 = new VueloModel(
                 1L,
@@ -61,8 +63,8 @@ public class VueloServiceTest {
                 "Medellin",
                 LocalDateTime.of(2023,11,9,9,00),
                 LocalDateTime.of(2023,11,9,10,00),
-                2000,
-                100,
+                2000.5,
+                180,
                 tipoVuelo,
                 aerolinea
                 );
@@ -145,17 +147,30 @@ public class VueloServiceTest {
                 aerolinea
         );
 
+        vuelo8 = VueloModelDto.build(
+                1L,
+                "AV001",
+                "Bogota",
+                "Medellin",
+                LocalDateTime.of(2024,11,9,16,30),
+                LocalDateTime.of(2024,11,9,17,00),
+                5000,
+                200,
+                "Publico",
+                "Avianca"
+                );
+
     }
 
     @Test
-    @DisplayName("busqueda vuelo por id exitoso")
+    @DisplayName("Busqueda de vuelo por id de vuelo exitosamente")
     public void testObtenerVueloExitoso() throws EntityNotFoundException {
-        when(this.vueloRepository.findById(any())).thenReturn(Optional.of(vuelo1));
+        when(this.vueloRepository.findById(any())).thenReturn(Optional.ofNullable(vuelo1));
+        when(this.vueloMapper.toVueloDto(any())).thenReturn(vuelo8);
+        VueloModelDto vueloEncontrado = this.vueloService.obtenerVueloPorId(1L);
 
-        VueloModelDto vueloCreado = this.vueloService.obtenerVueloPorId(any());
-
-        assertNotNull(vueloCreado);
-        assertThat(vueloCreado.getTipoVuelo()).hasToString("Economica");
+        assertNotNull(vueloEncontrado);
+        assertThat(vueloEncontrado.getTipoVuelo()).hasToString("Publico");
     }
 
 

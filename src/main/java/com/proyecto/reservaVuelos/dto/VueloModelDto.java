@@ -25,7 +25,7 @@ public class VueloModelDto {
 
     private double precio;
 
-    private long asientos;
+    private int asientos;
 
     private String tipoVuelo;
 

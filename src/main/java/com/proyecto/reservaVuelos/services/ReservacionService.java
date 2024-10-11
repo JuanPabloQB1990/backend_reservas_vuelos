@@ -2,7 +2,11 @@ package com.proyecto.reservaVuelos.services;
 
 import com.proyecto.reservaVuelos.dto.CrearReservaDto;
 import com.proyecto.reservaVuelos.dto.FacturaReservacionDto;
+import com.proyecto.reservaVuelos.dto.ReservacionModelDto;
+import com.proyecto.reservaVuelos.dto.VueloModelDto;
 import com.proyecto.reservaVuelos.excepcion.EntityNotFoundException;
+import com.proyecto.reservaVuelos.mappers.ClienteMapper;
+import com.proyecto.reservaVuelos.mappers.VueloMapper;
 import com.proyecto.reservaVuelos.models.ClienteModel;
 import com.proyecto.reservaVuelos.models.VueloModel;
 import com.proyecto.reservaVuelos.models.ReservacionModel;
@@ -25,28 +29,39 @@ public class ReservacionService {
     private VueloRepository vueloRepository;
     private ClienteRepository clienteRepository;
     private VueloService vueloService;
+    private VueloMapper vueloMapper;
+    private ClienteMapper clienteMapper;
 
     @Autowired
     public ReservacionService(
             ReservacionRepository reservacionRepository,
             VueloRepository vueloRepository,
             ClienteRepository clienteRepository,
-            VueloService vueloService
+            VueloService vueloService,
+            VueloMapper vueloMapper,
+            ClienteMapper clienteMapper
     ) {
         this.reservacionRepository = reservacionRepository;
         this.vueloRepository = vueloRepository;
         this.clienteRepository = clienteRepository;
         this.vueloService = vueloService;
+        this.vueloMapper = vueloMapper;
+        this.clienteMapper = clienteMapper;
+
 
     }
 
     HashMap<String, Object> datos;
 
     List<VueloModel> listaVuelos = new ArrayList<>();
+    List<VueloModelDto> listaVuelosReservados = new ArrayList<>();
 
     Optional<ClienteModel> pasajero;
+    List<ReservacionModelDto> listaReservacionesCliente = new ArrayList<>();
 
     ReservacionModel reservacion;
+
+
 
     double total = 0;
 
@@ -214,15 +229,42 @@ public class ReservacionService {
         return UUID.randomUUID().toString();
     }
 
-    public List<ReservacionModel> obtenerReservacionesPorIdCliente(Long idCliente) throws EntityNotFoundException {
+    public List<ReservacionModelDto> obtenerReservacionesPorIdCliente(Long idCliente) throws EntityNotFoundException {
 
         Optional<ClienteModel> cliente = this.clienteRepository.findById(idCliente);
-        System.out.println(cliente);
+
         if (cliente.isPresent()){
             List<ReservacionModel> listaReservaciones = this.reservacionRepository.findByCliente(cliente.get());
 
             if (!listaReservaciones.isEmpty()){
-                return listaReservaciones;
+
+                for (int i = 0; i < listaReservaciones.size(); i++) {
+                    listaVuelos.clear();
+                    if(listaReservaciones.get(i).getVuelo1() != null && listaReservaciones.get(i).getVuelo2() == null && listaReservaciones.get(i).getVuelo3() == null){
+                        listaVuelosReservados.add(vueloMapper.toVueloDto(listaReservaciones.get(i).getVuelo1()));
+                    }
+                    if(listaReservaciones.get(i).getVuelo1() != null && listaReservaciones.get(i).getVuelo2() != null && listaReservaciones.get(i).getVuelo3() == null){
+                        listaVuelosReservados.add(vueloMapper.toVueloDto(listaReservaciones.get(i).getVuelo2()));
+                    }
+                    if(listaReservaciones.get(i).getVuelo1() != null && listaReservaciones.get(i).getVuelo2() != null && listaReservaciones.get(i).getVuelo3() != null){
+                        listaVuelosReservados.add(vueloMapper.toVueloDto(listaReservaciones.get(i).getVuelo3()));
+                    }
+
+                    ReservacionModelDto reservacion = new ReservacionModelDto(
+                            listaReservaciones.get(i).getIdReservacion(),
+                            listaReservaciones.get(i).getCodigoReservacion(),
+                            listaVuelosReservados,
+                            listaReservaciones.get(i).getFechaReservacion(),
+                            listaReservaciones.get(i).getNumeroAsientos(),
+                            clienteMapper.toClienteDto(cliente.get())
+                    );
+
+                    listaReservacionesCliente.add(reservacion);
+
+
+                }
+
+                return listaReservacionesCliente;
             }
 
             throw new EntityNotFoundException("El cliente no tiene reservaciones");
@@ -231,8 +273,32 @@ public class ReservacionService {
 
     }
 
-    public ReservacionModel obtenerReservacionPorId(Long idReserva) {
-        return this.reservacionRepository.findById(idReserva).get();
+    public ReservacionModelDto obtenerReservacionPorId(String codigoReserva) throws EntityNotFoundException {
+        Optional<ReservacionModel> reservacionEncontrada = Optional.ofNullable(this.reservacionRepository.findByCodigoReservacion(codigoReserva));
+        if (reservacionEncontrada.isPresent()){
+            if(reservacionEncontrada.get().getVuelo1() != null && reservacionEncontrada.get().getVuelo2() == null && reservacionEncontrada.get().getVuelo3() == null){
+                listaVuelosReservados.add(vueloMapper.toVueloDto(reservacionEncontrada.get().getVuelo1()));
+            }
+            if(reservacionEncontrada.get().getVuelo1() != null && reservacionEncontrada.get().getVuelo2() != null && reservacionEncontrada.get().getVuelo3() == null){
+                listaVuelosReservados.add(vueloMapper.toVueloDto(reservacionEncontrada.get().getVuelo2()));
+            }
+            if(reservacionEncontrada.get().getVuelo1() != null && reservacionEncontrada.get().getVuelo2() != null && reservacionEncontrada.get().getVuelo3() != null){
+                listaVuelosReservados.add(vueloMapper.toVueloDto(reservacionEncontrada.get().getVuelo3()));
+            }
+
+            ReservacionModelDto reservacion = new ReservacionModelDto(
+                    reservacionEncontrada.get().getIdReservacion(),
+                    reservacionEncontrada.get().getCodigoReservacion(),
+                    listaVuelosReservados,
+                    reservacionEncontrada.get().getFechaReservacion(),
+                    reservacionEncontrada.get().getNumeroAsientos(),
+                    clienteMapper.toClienteDto(reservacionEncontrada.get().getCliente())
+            );
+            return reservacion;
+        }
+
+        throw new EntityNotFoundException("El cliente no tiene reservaciones");
+
     }
 
 }

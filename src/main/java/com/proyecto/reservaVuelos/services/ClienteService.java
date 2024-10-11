@@ -51,7 +51,7 @@ public class ClienteService {
         clienteRegistrado.setPais(cliente.getPais());
         clienteRegistrado.setCiudad(cliente.getCiudad());
         clienteRegistrado.setDireccion(cliente.getDireccion());
-        clienteRegistrado.setRol(RolModel.CLIENTE);
+        clienteRegistrado.setRol(RolModel.ADMIN);
         this.clienteRepository.save(clienteRegistrado);
 
         HashMap<String, Object> datos = new HashMap<>();
@@ -65,7 +65,7 @@ public class ClienteService {
         if (cliente.isPresent()){
             UsernamePasswordAuthenticationToken userNamePassword = new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
             authenticationManager.authenticate(userNamePassword);
-            UserDetails user = clienteRepository.findByUsername(loginDto.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User with username " + loginDto.getUsername() + " not found"));
+            UserDetails user = clienteRepository.findByUsername(loginDto.getUsername()).orElseThrow(() -> new UsernameNotFoundException("Usuario con username " + loginDto.getUsername() + " no encontrado"));
             String token = jwtService.getToken(user);
             return new ResponseEntity<>(new AuthRespuestaDto(token, cliente.get().getRol(), cliente.get().getIdCliente()), HttpStatus.OK);
         }

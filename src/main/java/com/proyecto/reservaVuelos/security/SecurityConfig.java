@@ -32,11 +32,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers("/api/clientes/auth/**", "api/vuelos/busqueda/criterio", "api/aerolineas", "api/tipo_vuelos","/api/reservaciones/reservacion", "/api/admin/cliente/**", "/api/reservaciones/cliente/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/vuelos/vuelo/**", "/api/vuelos/**").hasAnyAuthority("EMPLEADO","ADMIN")
+                        //.requestMatchers("api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/javainuse-openapi/**").hasAuthority("ADMIN")
+                        //.requestMatchers("/swagger-ui/**").permitAll()
                         //.requestMatchers(HttpMethod.POST,"/api/reservaciones/reservacion","/api/vuelos/vuelo").hasAnyAuthority("EMPLEADO","ADMIN")
                         //.requestMatchers(HttpMethod.POST,"/api/reservaciones/reservacion").hasAuthority("CLIENTE")
                         .requestMatchers(HttpMethod.PUT,"/api/vuelos/vuelo/**").hasAnyAuthority("EMPLEADO","ADMIN")
                         .requestMatchers(HttpMethod.DELETE,"/api/vuelos/vuelo/**").hasAnyAuthority("EMPLEADO","ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/reservaciones/reservacion/**", "/api/vuelos/busqueda/**").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.GET,"/api/reservaciones/cliente/**", "/api/reservaciones/reservacion/**", "/api/vuelos/busqueda/**").hasAnyAuthority("CLIENTE", "EMPLEADO","ADMIN")
                         .requestMatchers(HttpMethod.DELETE,"/api/reservaciones/reservacion/**").hasAuthority("CLIENTE")
                         .anyRequest().authenticated())
                 .sessionManagement(sessionManager ->
