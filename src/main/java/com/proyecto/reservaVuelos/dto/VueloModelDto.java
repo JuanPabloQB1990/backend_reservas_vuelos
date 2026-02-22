@@ -1,5 +1,7 @@
 package com.proyecto.reservaVuelos.dto;
 
+import com.proyecto.reservaVuelos.models.AeropuertoModel;
+import com.proyecto.reservaVuelos.models.VueloModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,19 +17,15 @@ public class VueloModelDto {
 
     private String codVuelo;
 
-    private String origen;
-
-    private String destino;
+    private AeropuertoDto origen;
+    private AeropuertoDto destino;
 
     private LocalDateTime fechaPartida;
-
     private LocalDateTime fechaLlegada;
 
     private double precio;
-
     private int asientos;
 
-    private String tipoVuelo;
-
-    private String aerolinea;
+    private TipoVueloDto tipoVuelo;
+    private AerolineaDto aerolinea;
 }

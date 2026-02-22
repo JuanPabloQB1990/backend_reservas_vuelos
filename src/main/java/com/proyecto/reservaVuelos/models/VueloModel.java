@@ -3,17 +3,17 @@ package com.proyecto.reservaVuelos.models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "vuelos")
+@Data
 public class VueloModel {
 
     @Id
@@ -22,11 +22,13 @@ public class VueloModel {
 
     private String codigoVuelo;
 
-    @NotEmpty(message = "el origen del vuelo es obligatorio")
-    private String origen;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "origen_id")
+    private AeropuertoModel origenId;
 
-    @NotEmpty(message = "el destino del vuelo es obligatorio")
-    private String destino;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "destino_id")
+    private AeropuertoModel destinoId;
 
     @Future
     @NotNull(message = "la fecha de partida del vuelo es obligatorio")
@@ -60,12 +62,12 @@ public class VueloModel {
         this.codigoVuelo = codigoVuelo;
     }
 
-    public void setOrigen(String origen) {
-        this.origen = origen;
+    public void setOrigen(AeropuertoModel aeropuertoOrigen) {
+        this.origenId = aeropuertoOrigen;
     }
 
-    public void setDestino(String destino) {
-        this.destino = destino;
+    public void setDestino(AeropuertoModel aeropuertoDestino) {
+        this.destinoId = aeropuertoDestino;
     }
 
     public void setFechaPartida(LocalDateTime fechaPartida) {

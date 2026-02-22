@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Stack;
 
@@ -31,6 +32,8 @@ import java.util.Stack;
 public class VueloController {
 
     private VueloService vueloService;
+
+    // *********************************************************** OBTENER VUELO POR ID ***************************************************** //
 
     @Autowired
     public VueloController(VueloService vueloService) {
@@ -49,6 +52,8 @@ public class VueloController {
         return this.vueloService.obtenerVueloPorId(idVuelo);
     }
 
+    // *********************************************************** OBTENER TODOS LOS VUELOS ***************************************************** //
+
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "404", description = "no hay vuelos programados",
@@ -61,21 +66,32 @@ public class VueloController {
         return this.vueloService.obtenerTodosLosVuelos(pageable);
     }
 
-    @Operation(summary = "Obtener vuelos por criterio")
-    @CrossOrigin(origins = "http://localhost:5173")
-    @GetMapping(path = "busqueda/criterio")
-    public Stack<List<VueloModelDto>> obtenerVuelosPorCriterio(
-            @RequestParam("origen") String origen,
-            @RequestParam("destino") String destino,
-            @RequestParam("fechaPartida") @Nullable LocalDate fechaPartida) throws EntityNotFoundException {
+    // *********************************************************** OBTENER VUELOS POR ORIGEN - DESTINO - FECHA ***************************************************** //
 
-        if (fechaPartida == null) {
-            return this.vueloService.obtenerTodosLosVuelosSinFecha(origen, destino);
-        }
-        return this.vueloService.obtenerTodosLosVuelosConFecha(origen, destino, fechaPartida);
+    @GetMapping("/buscar")
+    public ResponseEntity<?> buscarVuelos(
+
+            @RequestParam String origen,
+            @RequestParam String destino,
+            @RequestParam String fecha,
+            @RequestParam int pasajeros
+    ) {
+
+        LocalDateTime fechaParseada = LocalDate.parse(fecha).atStartOfDay();
+
+        List<?> vuelos = vueloService.buscarVuelosConEscalas(
+                origen,
+                destino,
+                fechaParseada,
+                pasajeros
+        );
+
+        return ResponseEntity.ok(vuelos);
     }
 
-    @Operation(summary = "Programar vuelos vuelos", security = {@SecurityRequirement(name= "BearerJWT")})
+    // *********************************************************** CREAR VUELOS ***************************************************** //
+
+    @Operation(summary = "Programar vuelos", security = {@SecurityRequirement(name= "BearerJWT")})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "el vuelo se guardo con exito",
                     content = { @Content(mediaType = "application/json",
@@ -83,10 +99,11 @@ public class VueloController {
     })
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping(path = "vuelo", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> crearVuelo(@RequestBody @Valid VueloModel vuelo){
-        return this.vueloService.crearVuelo(vuelo);
+    public ResponseEntity<Object> crearVuelo(){
+        return this.vueloService.verificarVuelosAlInicio();
     }
 
+    // *********************************************************** ACTUALIZAR VUELOS POR ID ***************************************************** //
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "el vuelo se actualizo con exito", content = @Content(schema = @Schema(implementation = ResponseEntity.class))),
             @ApiResponse(responseCode = "404", description = "el vuelo no se encuentra registrado",
@@ -100,23 +117,18 @@ public class VueloController {
     }
 
 
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "el vuelo se elimino con exito", content = @Content),
-            @ApiResponse(responseCode = "404", description = "El vuelo no se encuantra programado",
-                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
-    })
-    @Operation(summary = "Eliminar vuelo por id", security = {@SecurityRequirement(name= "BearerJWT")})
-    @CrossOrigin(origins = "http://localhost:5173")
-    @DeleteMapping(path = "vuelo/{idVuelo}")
-    public ResponseEntity<Object> eliminarVueloPorId(@PathVariable("idVuelo") Long idVuelo) throws EntityNotFoundException {
-        return this.vueloService.eliminarVueloPorId(idVuelo);
-    }
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "204", description = "el vuelo se elimino con exito", content = @Content),
+//            @ApiResponse(responseCode = "404", description = "El vuelo no se encuantra programado",
+//                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
+//    })
+//    @Operation(summary = "Eliminar vuelo por id", security = {@SecurityRequirement(name= "BearerJWT")})
+//    @CrossOrigin(origins = "http://localhost:5173")
+//    @DeleteMapping(path = "vuelo/{idVuelo}")
+//    public ResponseEntity<Object> eliminarVueloPorId(@PathVariable("idVuelo") Long idVuelo) throws EntityNotFoundException {
+//        return this.vueloService.eliminarVueloPorId(idVuelo);
+//    }
 
-    @Operation(summary = "Modificar fecha de vuelos", security = {@SecurityRequirement(name= "BearerJWT")})
-    @CrossOrigin(origins = "http://localhost:5173")
-    @GetMapping(path = "{num}")
-    public ResponseEntity<Object> actualizarFechasVuelos(@PathVariable int num){
-        return this.vueloService.actualizarFechasVuelos(num);
-    }
+
 
 }

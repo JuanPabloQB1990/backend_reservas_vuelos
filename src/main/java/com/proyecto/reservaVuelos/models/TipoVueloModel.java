@@ -2,13 +2,13 @@ package com.proyecto.reservaVuelos.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 @Data
+@Getter
+@Setter
 @Entity
 @Table(name = "tipo_vuelos")
 @AllArgsConstructor

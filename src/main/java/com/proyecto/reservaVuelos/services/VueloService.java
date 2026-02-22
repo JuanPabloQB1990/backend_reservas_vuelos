@@ -4,7 +4,9 @@ import com.proyecto.reservaVuelos.dto.EscalaModelList;
 import com.proyecto.reservaVuelos.dto.VueloModelDto;
 import com.proyecto.reservaVuelos.excepcion.EntityNotFoundException;
 import com.proyecto.reservaVuelos.mappers.VueloMapper;
+import com.proyecto.reservaVuelos.models.AeropuertoModel;
 import com.proyecto.reservaVuelos.models.VueloModel;
+import com.proyecto.reservaVuelos.repositories.AeropuertoRepository;
 import com.proyecto.reservaVuelos.repositories.VueloRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,8 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -23,14 +28,18 @@ public class VueloService {
 
     private VueloRepository vueloRepository;
     private VueloMapper vueloMapper;
+    private final AeropuertoRepository aeropuertoRepository;
 
     @Autowired
-    public VueloService(VueloRepository vueloRepository, VueloMapper vueloMapper) {
+    public VueloService(VueloRepository vueloRepository, VueloMapper vueloMapper, AeropuertoRepository aeropuertoRepository) {
         this.vueloRepository = vueloRepository;
         this.vueloMapper = vueloMapper;
+        this.aeropuertoRepository = aeropuertoRepository;
     }
 
     private HashMap<String, Object> datos;
+
+    private static final int MAX_ESCALAS = 3;
 
     public VueloModelDto obtenerVueloPorId(Long idVuelo) throws EntityNotFoundException {
 
@@ -59,243 +68,322 @@ public class VueloService {
 
     }
 
-    public Stack<List<VueloModelDto>> obtenerTodosLosVuelosConFecha(String origen, String destino, LocalDate fechaPartida) throws EntityNotFoundException {
+    // METODO AUXILIAR
 
-        Stack<List<VueloModelDto>> escalas = new Stack<>();
+    private void buscarConexiones(
+            String ciudadActual,
+            String destinoFinal,
+            LocalDateTime llegadaAnterior,
+            List<VueloModel> rutaActual,
+            List<List<VueloModel>> resultados,
+            int escalas,
+            int pasajeros,
+            String paisOrigen,
+            boolean salioDelPais
+    ) {
 
-        List<VueloModelDto> listaVuelos = new ArrayList<>();
+        if (escalas > MAX_ESCALAS) return;
 
-        List<VueloModel> vuelosDirectosConFecha =  vueloRepository.buscarVuelosDirectosConFecha(origen, destino, fechaPartida);
-
-        if (!vuelosDirectosConFecha.isEmpty()){
-            for (VueloModel vueloDirecto: vuelosDirectosConFecha) {
-                listaVuelos.add(vueloMapper.toVueloDto(vueloDirecto));
-
-            }
-
-            escalas.add(new EscalaModelList(listaVuelos).getVuelos());
+        if (ciudadActual.equalsIgnoreCase(destinoFinal)) {
+            resultados.add(new ArrayList<>(rutaActual));
+            return;
         }
 
-        // buscar vuelos con solo origen -> primeros vuelos
-        List<VueloModel> primerosVuelos = vueloRepository.buscarVuelosConSoloOrigenConFecha(origen, fechaPartida);
+        LocalDateTime minConexion = llegadaAnterior.plusMinutes(45);
+        LocalDateTime maxConexion = llegadaAnterior.plusHours(3);
 
-        // guardar vuelos con una escala
-        for (VueloModel primerVuelo: primerosVuelos) {
+        List<VueloModel> siguientes =
+                vueloRepository.buscarConexionesValidas(
+                        ciudadActual,
+                        minConexion,
+                        maxConexion,
+                        pasajeros
+                );
 
-            // buscar vuelos segundo con destino
-            List<VueloModel> segundoVueloUnaEscala = vueloRepository.buscarSegundoVueloUnaEscala(primerVuelo.getDestino(), destino, primerVuelo.getFechaLlegada());
+        for (VueloModel siguiente : siguientes) {
 
-            if (!segundoVueloUnaEscala.isEmpty()){
+            String ciudadSiguiente = siguiente.getDestinoId().getCiudad();
+            String paisSiguiente = siguiente.getDestinoId().getPais();
 
-                for (VueloModel segundoVuelo: segundoVueloUnaEscala) {
-                    if (segundoVuelo.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada())){
-                        listaVuelos.add(vueloMapper.toVueloDto(primerVuelo));
-                        listaVuelos.add(vueloMapper.toVueloDto(segundoVuelo));
+            // evitar repetir ciudad
+            boolean ciudadVisitada = rutaActual.stream()
+                    .anyMatch(v ->
+                            v.getOrigenId().getCiudad()
+                                    .equalsIgnoreCase(ciudadSiguiente)
+                                    ||
+                                    v.getDestinoId().getCiudad()
+                                            .equalsIgnoreCase(ciudadSiguiente)
+                    );
 
-                        EscalaModelList escala = new EscalaModelList(listaVuelos);
-                        escalas.push(escala.getVuelos());
-                        escala.setVuelos(listaVuelos = new ArrayList<>());
-                    }
+            if (ciudadVisitada) continue;
 
-                }
+            // evitar salir del país y volver
+            if (salioDelPais && paisSiguiente.equalsIgnoreCase(paisOrigen)) {
+                continue;
             }
 
-            List<VueloModel> vuelosTerceros = vueloRepository.buscarTercerVueloDosEscalas(destino, primerVuelo.getFechaLlegada());
-
-            if (!vuelosTerceros.isEmpty()) {
-
-                for (VueloModel vueloTercero : vuelosTerceros) {
-
-                    // buscar vuelos intermedios
-                    List<VueloModel> vuelosIntermedios = vueloRepository.buscarVuelosIntermidiosDosEscalas(primerVuelo.getDestino(),vueloTercero.getOrigen(), primerVuelo.getFechaLlegada(), vueloTercero.getFechaPartida());
-
-                    if (!vuelosIntermedios.isEmpty()) {
-
-                        for (VueloModel vueloIntermedio :vuelosIntermedios) {
-
-                            if (vueloTercero.getFechaPartida().minusHours(1).isAfter(vueloIntermedio.getFechaLlegada())){
-                                listaVuelos.add(vueloMapper.toVueloDto(primerVuelo));
-                                listaVuelos.add(vueloMapper.toVueloDto(vueloIntermedio));
-                                listaVuelos.add(vueloMapper.toVueloDto(vueloTercero));
-
-                                EscalaModelList escala = new EscalaModelList(listaVuelos);
-                                escalas.push(escala.getVuelos());
-                                escala.setVuelos(listaVuelos = new ArrayList<>());
-                            }
-
-                        }
-                    }
-
-                }
+            if (escalas >= 2 && paisSiguiente.equalsIgnoreCase(paisOrigen)) {
+                continue;
             }
-        }
 
-        if (!escalas.isEmpty()){
-            return escalas;
-        }else {
-            throw new EntityNotFoundException("no hay vuelos programados");
+            boolean nuevoSalioDelPais =
+                    salioDelPais || !paisSiguiente.equalsIgnoreCase(paisOrigen);
+
+            rutaActual.add(siguiente);
+
+            buscarConexiones(
+                    ciudadSiguiente,
+                    destinoFinal,
+                    siguiente.getFechaLlegada(),
+                    rutaActual,
+                    resultados,
+                    escalas + 1,
+                    pasajeros,
+                    paisOrigen,
+                    nuevoSalioDelPais
+            );
+
+            rutaActual.remove(rutaActual.size() - 1);
         }
     }
 
-    public Stack<List<VueloModelDto>> obtenerTodosLosVuelosSinFecha(String origen, String destino) throws EntityNotFoundException {
+    public List<List<VueloModel>> buscarVuelosConEscalas(
+            String origen,
+            String destino,
+            LocalDateTime fecha,
+            int pasajeros
+    ) {
 
-        Stack<List<VueloModelDto>> escalas = new Stack<>();
-        ArrayList<VueloModelDto> listaVuelos = new ArrayList<>();
+        List<List<VueloModel>> resultados = new ArrayList<>();
 
-        //buscar vuelos directos
-        List<VueloModel> vuelosDirectosSinFecha = vueloRepository.buscarVuelosDirectosSinFecha(origen, destino);
+        LocalDateTime inicioDia = fecha.toLocalDate().atStartOfDay();
+        LocalDateTime finDia = inicioDia.plusDays(1);
 
-        if (!vuelosDirectosSinFecha.isEmpty()){
-            for (VueloModel vueloDirecto: vuelosDirectosSinFecha) {
-                listaVuelos.add(vueloMapper.toVueloDto(vueloDirecto));
+        List<VueloModel> primerosVuelos =
+                vueloRepository.buscarPrimerTramo(
+                        origen,
+                        inicioDia,
+                        finDia,
+                        pasajeros
+                );
 
-                EscalaModelList escala = new EscalaModelList(listaVuelos);
-                escalas.push(escala.getVuelos());
-                escala.setVuelos(listaVuelos = new ArrayList<>());
-            }
+        System.out.println("Vuelos encontrados: " + primerosVuelos.size());
 
+        for (VueloModel vuelo : primerosVuelos) {
+
+            List<VueloModel> rutaActual = new ArrayList<>();
+            rutaActual.add(vuelo);
+
+            String paisOrigen = vuelo.getOrigenId().getPais();
+
+            boolean salioDelPais =
+                    !vuelo.getDestinoId().getPais()
+                            .equalsIgnoreCase(paisOrigen);
+
+            buscarConexiones(
+                    vuelo.getDestinoId().getCiudad(),
+                    destino,
+                    vuelo.getFechaLlegada(),
+                    rutaActual,
+                    resultados,
+                    0,
+                    pasajeros,
+                    paisOrigen,
+                    salioDelPais
+            );
         }
 
-        // buscar vuelos con solo origen -> primeros vuelos
-        List<VueloModel> primerosVuelos = vueloRepository.buscarVuelosConSoloOrigenSinFecha(origen);
+        return resultados;
+    }
+    // ************************************* Crear y Actualizar vuelos ************************************************************************************
 
-        // guardar vuelos con una escala
-        for (VueloModel primerVuelo: primerosVuelos) {
+    @Scheduled(fixedDelay = 1800000) // 30 minutos
+    public ResponseEntity<Object> verificarVuelos() {
 
-            // buscar vuelos segundo con destino
-            List<VueloModel> segundoVueloUnaEscala = vueloRepository.buscarSegundoVueloUnaEscala(primerVuelo.getDestino(), destino, primerVuelo.getFechaLlegada());
+        long total = vueloRepository.count();
 
-            if (!segundoVueloUnaEscala.isEmpty()){
-
-                for (VueloModel segundoVuelo: segundoVueloUnaEscala) {
-                    if (segundoVuelo.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada()) && !segundoVuelo.getFechaPartida().minusHours(12).isAfter(primerVuelo.getFechaLlegada())){
-
-                        listaVuelos.add(vueloMapper.toVueloDto(primerVuelo));
-                        listaVuelos.add(vueloMapper.toVueloDto(segundoVuelo));
-
-                        EscalaModelList escala = new EscalaModelList(listaVuelos);
-                        escalas.push(escala.getVuelos());
-                        escala.setVuelos(listaVuelos = new ArrayList<>());
-                    }
-
-                }
-            }
-
-            List<VueloModel> vuelosTerceros = vueloRepository.buscarTercerVueloDosEscalas(destino, primerVuelo.getFechaLlegada());
-
-            if (!vuelosTerceros.isEmpty()) {
-
-                for (VueloModel vueloTercero : vuelosTerceros) {
-
-                // buscar vuelos intermedios
-                    List<VueloModel> vuelosIntermedios = vueloRepository.buscarVuelosIntermidiosDosEscalas(primerVuelo.getDestino(),vueloTercero.getOrigen(), primerVuelo.getFechaLlegada(), vueloTercero.getFechaPartida());
-
-                    if (!vuelosIntermedios.isEmpty()) {
-
-                        for (VueloModel vueloIntermedio :vuelosIntermedios) {
-
-                            if (vueloTercero.getFechaPartida().minusHours(1).isAfter(vueloIntermedio.getFechaLlegada()) && !vueloTercero.getFechaPartida().minusHours(12).isAfter(vueloIntermedio.getFechaLlegada()) && vueloIntermedio.getFechaPartida().minusHours(1).isAfter(primerVuelo.getFechaLlegada()) && !vueloIntermedio.getFechaPartida().minusHours(12).isAfter(primerVuelo.getFechaLlegada())){
-
-                                listaVuelos.add(vueloMapper.toVueloDto(primerVuelo));
-                                listaVuelos.add(vueloMapper.toVueloDto(vueloIntermedio));
-                                listaVuelos.add(vueloMapper.toVueloDto(vueloTercero));
-
-                                EscalaModelList escala = new EscalaModelList(listaVuelos);
-                                escalas.push(escala.getVuelos());
-                                escala.setVuelos(listaVuelos = new ArrayList<>());
-                            }
-
-                        }
-                    }
-
-                }
-            }
+        if (total == 0) {
+            return crearVuelo();
+        } else {
+            return actualizarVuelosExpirados();
         }
-
-        if (!escalas.isEmpty()){
-            return escalas;
-        }else {
-            throw new EntityNotFoundException("no hay vuelos programados");
-        }
-
     }
 
-    public ResponseEntity<Object> crearVuelo(VueloModel vuelo){
+    public ResponseEntity<Object> verificarVuelosAlInicio() {
 
-        for (int i = 0; i <= 29; i+=5) {
+        long total = vueloRepository.count();
 
-            if (i == 0){
-                for (int j = 1; j < 7; j+=5) {
-                    if (j == 1){
-                        this.vueloRepository.crearVuelo(
-                                vuelo.getOrigen(),
-                                vuelo.getDestino(),
-                                vuelo.getFechaPartida(),
-                                vuelo.getFechaLlegada(),
-                                vuelo.getPrecio(),
-                                vuelo.getAsientos(),
-                                vuelo.getTipoVuelo().getIdTipoVuelo(),
-                                vuelo.getAerolinea().getIdAerolinea());
-                    }else{
-                        LocalDateTime fechaPartidaConUnaHoraMas = vuelo.getFechaPartida().plusHours(j);
-                        LocalDateTime fechaLlegadaConUnaHoraMas = vuelo.getFechaLlegada().plusHours(j);
+        if (total == 0) {
+            return crearVuelo();
+        } else {
+            return actualizarVuelosExpirados();
+        }
+    }
 
-                        this.vueloRepository.crearVuelo(
-                                vuelo.getOrigen(),
-                                vuelo.getDestino(),
-                                fechaPartidaConUnaHoraMas,
-                                fechaLlegadaConUnaHoraMas,
-                                vuelo.getPrecio(),
-                                vuelo.getAsientos(),
-                                vuelo.getTipoVuelo().getIdTipoVuelo(),
-                                vuelo.getAerolinea().getIdAerolinea());
-                    }
-                }
+    public ResponseEntity<Object> crearVuelo() {
 
-            }else{
+        Random random = new Random();
 
-                LocalDateTime fechaPartidaConUnDiaMas = vuelo.getFechaPartida().plusDays(i);
-                LocalDateTime fechaLlegadaConUnDiaMas = vuelo.getFechaLlegada().plusDays(i);
+        List<AeropuertoModel> aeropuertos = aeropuertoRepository.findAll();
 
-                for (int j = 1; j < 7; j+=5) {
-                    if (j==1){
-                        this.vueloRepository.crearVuelo(
-                                vuelo.getOrigen(),
-                                vuelo.getDestino(),
-                                fechaPartidaConUnDiaMas,
-                                fechaLlegadaConUnDiaMas,
-                                vuelo.getPrecio(),
-                                vuelo.getAsientos(),
-                                vuelo.getTipoVuelo().getIdTipoVuelo(),
-                                vuelo.getAerolinea().getIdAerolinea());
-                    }else{
-                        LocalDateTime fechaPartidaConUnaHoraMas = fechaLlegadaConUnDiaMas.plusHours(j);
-                        LocalDateTime fechaLlegadaConUnaHoraMas = fechaLlegadaConUnDiaMas.plusHours(j);
+        List<AeropuertoModel> hubs = aeropuertos.stream()
+                .limit(8)
+                .toList();
 
-                        this.vueloRepository.crearVuelo(
-                                vuelo.getOrigen(),
-                                vuelo.getDestino(),
-                                fechaPartidaConUnaHoraMas,
-                                fechaLlegadaConUnaHoraMas,
-                                vuelo.getPrecio(),
-                                vuelo.getAsientos(),
-                                vuelo.getTipoVuelo().getIdTipoVuelo(),
-                                vuelo.getAerolinea().getIdAerolinea());
-                    }
+        int totalVuelos = 8000;
 
-                }
+        for (int i = 0; i < totalVuelos; i++) {
 
+            AeropuertoModel origen;
+            AeropuertoModel destino;
+
+            int tipoRuta = random.nextInt(4);
+
+            // HUB -> HUB
+            if (tipoRuta == 0) {
+
+                origen = hubs.get(random.nextInt(hubs.size()));
+
+                do {
+                    destino = hubs.get(random.nextInt(hubs.size()));
+                } while (origen.equals(destino));
             }
 
+            // HUB -> ciudad
+            else if (tipoRuta == 1) {
+
+                origen = hubs.get(random.nextInt(hubs.size()));
+
+                do {
+                    destino = aeropuertos.get(random.nextInt(aeropuertos.size()));
+                } while (origen.equals(destino));
+            }
+
+            // ciudad -> HUB
+            else if (tipoRuta == 2) {
+
+                destino = hubs.get(random.nextInt(hubs.size()));
+
+                do {
+                    origen = aeropuertos.get(random.nextInt(aeropuertos.size()));
+                } while (origen.equals(destino));
+            }
+
+            // ciudad -> ciudad
+            else {
+
+                origen = aeropuertos.get(random.nextInt(aeropuertos.size()));
+
+                do {
+                    destino = aeropuertos.get(random.nextInt(aeropuertos.size()));
+                } while (origen.equals(destino));
+            }
+
+            // día del vuelo
+            int dias = random.nextInt(25);
+
+            // bancos de conexiones
+            int banco = random.nextInt(4);
+
+            int horaBase;
+
+            switch (banco) {
+                case 0 -> horaBase = 6;
+                case 1 -> horaBase = 10;
+                case 2 -> horaBase = 14;
+                default -> horaBase = 18;
+            }
+
+            LocalDateTime salida = LocalDateTime.now()
+                    .plusDays(dias)
+                    .withHour(horaBase + random.nextInt(2))
+                    .withMinute(random.nextInt(60));
+
+            int duracion = 1 + random.nextInt(8);
+
+            LocalDateTime llegada = salida.plusHours(duracion);
+
+            Long tipoVueloId = random.nextBoolean() ? 1L : 2L;
+
+            Long aerolineaId = (long) (random.nextInt(7) + 1);
+
+            double precio;
+
+            if (tipoVueloId == 1)
+                precio = 60 + random.nextInt(120);
+            else
+                precio = 220 + random.nextInt(700);
+
+            int asientos = 90 + random.nextInt(180);
+
+            vueloRepository.crearVuelo(
+                    origen.getIdAeropuerto(),
+                    destino.getIdAeropuerto(),
+                    salida,
+                    llegada,
+                    precio,
+                    asientos,
+                    tipoVueloId,
+                    aerolineaId
+            );
+
+            // crear vuelo de regreso (muy importante)
+            if (random.nextBoolean()) {
+
+                LocalDateTime regresoSalida = llegada.plusHours(1 + random.nextInt(3));
+                LocalDateTime regresoLlegada = regresoSalida.plusHours(duracion);
+
+                vueloRepository.crearVuelo(
+                        destino.getIdAeropuerto(),
+                        origen.getIdAeropuerto(),
+                        regresoSalida,
+                        regresoLlegada,
+                        precio,
+                        asientos,
+                        tipoVueloId,
+                        aerolineaId
+                );
+            }
         }
 
-        datos = new HashMap<>();
-        datos.put("message", "los vuelos se guardaron con exito");
+        return ResponseEntity.ok("Vuelos generados correctamente");
+    }
 
-        return new ResponseEntity<>(
-                datos,
-                HttpStatus.CREATED
-        );
+    @Transactional
+    public ResponseEntity<Object> actualizarVuelosExpirados() {
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        List<VueloModel> expirados =
+                vueloRepository.vuelosExpirados(ahora);
+
+        for (VueloModel vuelo : expirados) {
+
+            VueloModel nuevoVuelo = new VueloModel();
+
+            nuevoVuelo.setCodigoVuelo(vuelo.getCodigoVuelo());
+            nuevoVuelo.setOrigenId(vuelo.getOrigenId());
+            nuevoVuelo.setDestinoId(vuelo.getDestinoId());
+
+            nuevoVuelo.setFechaPartida(
+                    vuelo.getFechaPartida().plusMonths(1)
+            );
+
+            nuevoVuelo.setFechaLlegada(
+                    vuelo.getFechaLlegada().plusMonths(1)
+            );
+
+            nuevoVuelo.setPrecio(vuelo.getPrecio());
+            nuevoVuelo.setAsientos(vuelo.getAsientos());
+            nuevoVuelo.setAerolinea(vuelo.getAerolinea());
+            nuevoVuelo.setTipoVuelo(vuelo.getTipoVuelo());
+
+            vueloRepository.delete(vuelo);
+
+            vueloRepository.save(nuevoVuelo);
+        }
+
+        return ResponseEntity.ok("Vuelos actualizados");
     }
 
     public ResponseEntity<Object> actualizarVuelo(Long idVuelo, VueloModel editVuelo) throws EntityNotFoundException {
@@ -306,8 +394,8 @@ public class VueloService {
 
         if (vueloEncontrado.isPresent()){
             if (editVuelo.getAerolinea().getIdAerolinea() == vueloEncontrado.get().getAerolinea().getIdAerolinea()){
-                vueloEncontrado.get().setOrigen(editVuelo.getOrigen());
-                vueloEncontrado.get().setDestino(editVuelo.getDestino());
+                vueloEncontrado.get().setOrigenId(editVuelo.getOrigenId());
+                vueloEncontrado.get().setDestinoId(editVuelo.getDestinoId());
                 vueloEncontrado.get().setFechaPartida(editVuelo.getFechaPartida());
                 vueloEncontrado.get().setFechaLlegada(editVuelo.getFechaLlegada());
                 vueloEncontrado.get().setPrecio(editVuelo.getPrecio());
@@ -318,8 +406,8 @@ public class VueloService {
             }else{
                 vueloRepository.actualizarVuelo(
                         idVuelo,
-                        editVuelo.getOrigen(),
-                        editVuelo.getDestino(),
+                        editVuelo.getOrigenId().getIdAeropuerto(),
+                        editVuelo.getDestinoId().getIdAeropuerto(),
                         editVuelo.getFechaPartida(),
                         editVuelo.getFechaLlegada(),
                         editVuelo.getPrecio(),
@@ -357,20 +445,7 @@ public class VueloService {
 
     }
 
-    public ResponseEntity<Object> actualizarFechasVuelos(int num) {
-        List<VueloModel> vuelos = this.vueloRepository.findAll();
 
-        for (VueloModel vuelo :vuelos) {
-            LocalDateTime fechaPartidaConUnMesMas = vuelo.getFechaPartida().plusMonths(num);
-            LocalDateTime fechaLlegadaConUnMesMas = vuelo.getFechaLlegada().plusMonths(num);
-            vuelo.setFechaPartida(fechaPartidaConUnMesMas);
-            vuelo.setFechaLlegada(fechaLlegadaConUnMesMas);
-            this.vueloRepository.save(vuelo);
-        }
-
-        return ResponseEntity.accepted().body("vuelos actualizados");
-
-    }
 
 
 }
