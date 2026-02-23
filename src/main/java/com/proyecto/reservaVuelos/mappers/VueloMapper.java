@@ -15,8 +15,8 @@ public interface VueloMapper{
             @Mapping(source = "codigoVuelo", target = "codVuelo"),
             @Mapping(source = "tipoVuelo", target = "tipoVuelo"),
             @Mapping(source = "aerolinea", target = "aerolinea"),
-            @Mapping(source = "origenId", target = "origen"),
-            @Mapping(source = "destinoId", target = "destino")
+            @Mapping(source = "origen", target = "origen"),
+            @Mapping(source = "destino", target = "destino")
 
     })
     VueloModelDto toVueloDto(VueloModel vuelo);

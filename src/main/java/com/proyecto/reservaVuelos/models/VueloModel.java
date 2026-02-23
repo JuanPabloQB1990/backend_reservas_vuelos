@@ -9,88 +9,50 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
-@Table(name = "vuelos")
 @Data
+@Table(name = "vuelos")
 public class VueloModel {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idVuelo;
 
+    @Column(nullable = false, unique = true)
     private String codigoVuelo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "origen_id")
-    private AeropuertoModel origenId;
+    @JoinColumn(name = "origen_id", nullable = false)
+    private AeropuertoModel origen;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destino_id")
-    private AeropuertoModel destinoId;
+    @JoinColumn(name = "destino_id", nullable = false)
+    private AeropuertoModel destino;
 
     @Future
-    @NotNull(message = "la fecha de partida del vuelo es obligatorio")
+    @NotNull
     private LocalDateTime fechaPartida;
 
     @Future
-    @NotNull(message = "la fecha de llegada del vuelo es obligatorio")
+    @NotNull
     private LocalDateTime fechaLlegada;
 
-    @Min(value = 1, message = "el precio del vuelo debe ser saldo positivo")
+    @Min(1)
     private double precio;
 
-    @Min(value = 1, message = "los asientos deben ser mayor a 0")
+    @Min(1)
     private int asientos;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idTipoVuelo")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private TipoVueloModel tipoVuelo;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idAerolinea")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private AerolineaModel aerolinea;
 
-    public void setIdVuelo(Long idVuelo) {
-        this.idVuelo = idVuelo;
-    }
 
-    public void setCodigoVuelo(String codigoVuelo) {
-        this.codigoVuelo = codigoVuelo;
-    }
-
-    public void setOrigen(AeropuertoModel aeropuertoOrigen) {
-        this.origenId = aeropuertoOrigen;
-    }
-
-    public void setDestino(AeropuertoModel aeropuertoDestino) {
-        this.destinoId = aeropuertoDestino;
-    }
-
-    public void setFechaPartida(LocalDateTime fechaPartida) {
-        this.fechaPartida = fechaPartida;
-    }
-
-    public void setFechaLlegada(LocalDateTime fechaLlegada) {
-        this.fechaLlegada = fechaLlegada;
-    }
-
-    public void setPrecio(double precio) {
-        this.precio = precio;
-    }
-
-    public void setAsientos(int asientos) {
-        this.asientos = asientos;
-    }
-
-    public void setTipoVuelo(TipoVueloModel tipoVuelo) {
-        this.tipoVuelo = tipoVuelo;
-    }
-
-    public void setAerolinea(AerolineaModel aerolinea) {
-        this.aerolinea = aerolinea;
-    }
 }

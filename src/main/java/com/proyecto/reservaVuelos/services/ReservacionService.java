@@ -64,166 +64,166 @@ public class ReservacionService {
 
 
     double total = 0;
+//
+//    public ResponseEntity<Object> crearReservacion(CrearReservaDto reserva) throws EntityNotFoundException {
+//        listaVuelos.clear();
+//        total = 0;
+//        Optional<VueloModel> primerVuelo = vueloRepository.findById(reserva.getIdVuelo1());
+//
+//        if (primerVuelo.get().getFechaPartida().minusHours(3).isBefore(LocalDateTime.now())){
+//            throw new EntityNotFoundException("La reserva debe realizarse con al menos 3 horas de anticipación.");
+//
+//        }else{
+//            pasajero = this.clienteRepository.findById(reserva.getIdCliente());
+//
+//            if (pasajero.isPresent()){
+//                List<Number> listaIdsVuelosReservar = new ArrayList<>();
+//
+//                if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() == null && reserva.getIdVuelo3() == null){
+//                    listaIdsVuelosReservar.add(reserva.getIdVuelo1());
+//                }
+//                if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() == null) {
+//                    listaIdsVuelosReservar.add(reserva.getIdVuelo1());
+//                    listaIdsVuelosReservar.add(reserva.getIdVuelo2());
+//                }
+//                if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() != null){
+//                    listaIdsVuelosReservar.add(reserva.getIdVuelo1());
+//                    listaIdsVuelosReservar.add(reserva.getIdVuelo2());
+//                    listaIdsVuelosReservar.add(reserva.getIdVuelo3());
+//                }
+//
+//                for (Number id : listaIdsVuelosReservar) {
+//
+//                    // Obtener el vuelo
+//                    Optional<VueloModel> vuelo = vueloRepository.findById((Long) id);
+//
+//                    // Asientos disponibles
+//                    if (vuelo.get().getAsientos() >= reserva.getAsientos()) {
+//
+//                        // Actualizar el número de asientos disponibles
+//                        vuelo.get().setAsientos(vuelo.get().getAsientos() - reserva.getAsientos());
+//                        listaVuelos.add(vuelo.get());
+//                        vueloService.actualizarVuelo(vuelo.get().getIdVuelo(), vuelo.get());
+//
+//                    } else {
+//                        throw new EntityNotFoundException("No hay suficientes asientos disponibles para el vuelo");
+//                    }
+//
+//                }
+//            }else{
+//                throw new EntityNotFoundException("el cliente no esta registrado");
+//
+//            }
+//        }
+//
+//            // Crear y guardar la reserva en la base de datos
+//            String codigoReservacion = generarCodigoReservacion();
+//
+//            if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() == null && reserva.getIdVuelo3() == null){
+//                reservacion = new ReservacionModel(
+//                        codigoReservacion,
+//                        listaVuelos.get(0),
+//                        LocalDateTime.now(),
+//                        reserva.getAsientos(),
+//                        pasajero.get()
+//                );
+//
+//
+//            }
+//            if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() == null) {
+//                reservacion = new ReservacionModel(
+//                        codigoReservacion,
+//                        listaVuelos.get(0),
+//                        listaVuelos.get(1),
+//                        LocalDateTime.now(),
+//                        reserva.getAsientos(),
+//                        pasajero.get()
+//                );
+//
+//            }
+//            if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() != null){
+//                reservacion = new ReservacionModel(
+//                        codigoReservacion,
+//                        listaVuelos.get(0),
+//                        listaVuelos.get(1),
+//                        listaVuelos.get(2),
+//                        LocalDateTime.now(),
+//                        reserva.getAsientos(),
+//                        pasajero.get()
+//                );
+//
+//            }
+//
+//            reservacionRepository.save(reservacion);
+//
+//            for (int i = 0; i < reserva.getAsientos(); i++) {
+//                for (VueloModel vuelo: listaVuelos) {
+//                    total += vuelo.getPrecio();
+//                }
+//            }
+//
+//            return new ResponseEntity<>(
+//                    FacturaReservacionDto.builder()
+//                            .message("la reserva se realizo satisfactoriamente")
+//                            .codigo(reservacion.getCodigoReservacion())
+//                            .fechaReserva(reservacion.getFechaReservacion())
+//                            .vuelos(listaVuelos)
+//                            .asientos(reservacion.getNumeroAsientos())
+//                            .total_a_pagar(total)
+//                            .build(),
+//                    HttpStatusCode.valueOf(201)
+//            );
+//
+//    }
 
-    public ResponseEntity<Object> crearReservacion(CrearReservaDto reserva) throws EntityNotFoundException {
-        listaVuelos.clear();
-        total = 0;
-        Optional<VueloModel> primerVuelo = vueloRepository.findById(reserva.getIdVuelo1());
-
-        if (primerVuelo.get().getFechaPartida().minusHours(3).isBefore(LocalDateTime.now())){
-            throw new EntityNotFoundException("La reserva debe realizarse con al menos 3 horas de anticipación.");
-
-        }else{
-            pasajero = this.clienteRepository.findById(reserva.getIdCliente());
-
-            if (pasajero.isPresent()){
-                List<Number> listaIdsVuelosReservar = new ArrayList<>();
-
-                if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() == null && reserva.getIdVuelo3() == null){
-                    listaIdsVuelosReservar.add(reserva.getIdVuelo1());
-                }
-                if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() == null) {
-                    listaIdsVuelosReservar.add(reserva.getIdVuelo1());
-                    listaIdsVuelosReservar.add(reserva.getIdVuelo2());
-                }
-                if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() != null){
-                    listaIdsVuelosReservar.add(reserva.getIdVuelo1());
-                    listaIdsVuelosReservar.add(reserva.getIdVuelo2());
-                    listaIdsVuelosReservar.add(reserva.getIdVuelo3());
-                }
-
-                for (Number id : listaIdsVuelosReservar) {
-
-                    // Obtener el vuelo
-                    Optional<VueloModel> vuelo = vueloRepository.findById((Long) id);
-
-                    // Asientos disponibles
-                    if (vuelo.get().getAsientos() >= reserva.getAsientos()) {
-
-                        // Actualizar el número de asientos disponibles
-                        vuelo.get().setAsientos(vuelo.get().getAsientos() - reserva.getAsientos());
-                        listaVuelos.add(vuelo.get());
-                        vueloService.actualizarVuelo(vuelo.get().getIdVuelo(), vuelo.get());
-
-                    } else {
-                        throw new EntityNotFoundException("No hay suficientes asientos disponibles para el vuelo");
-                    }
-
-                }
-            }else{
-                throw new EntityNotFoundException("el cliente no esta registrado");
-
-            }
-        }
-
-            // Crear y guardar la reserva en la base de datos
-            String codigoReservacion = generarCodigoReservacion();
-
-            if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() == null && reserva.getIdVuelo3() == null){
-                reservacion = new ReservacionModel(
-                        codigoReservacion,
-                        listaVuelos.get(0),
-                        LocalDateTime.now(),
-                        reserva.getAsientos(),
-                        pasajero.get()
-                );
-
-
-            }
-            if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() == null) {
-                reservacion = new ReservacionModel(
-                        codigoReservacion,
-                        listaVuelos.get(0),
-                        listaVuelos.get(1),
-                        LocalDateTime.now(),
-                        reserva.getAsientos(),
-                        pasajero.get()
-                );
-
-            }
-            if (reserva.getIdVuelo1() != null && reserva.getIdVuelo2() != null && reserva.getIdVuelo3() != null){
-                reservacion = new ReservacionModel(
-                        codigoReservacion,
-                        listaVuelos.get(0),
-                        listaVuelos.get(1),
-                        listaVuelos.get(2),
-                        LocalDateTime.now(),
-                        reserva.getAsientos(),
-                        pasajero.get()
-                );
-
-            }
-
-            reservacionRepository.save(reservacion);
-
-            for (int i = 0; i < reserva.getAsientos(); i++) {
-                for (VueloModel vuelo: listaVuelos) {
-                    total += vuelo.getPrecio();
-                }
-            }
-
-            return new ResponseEntity<>(
-                    FacturaReservacionDto.builder()
-                            .message("la reserva se realizo satisfactoriamente")
-                            .codigo(reservacion.getCodigoReservacion())
-                            .fechaReserva(reservacion.getFechaReservacion())
-                            .vuelos(listaVuelos)
-                            .asientos(reservacion.getNumeroAsientos())
-                            .total_a_pagar(total)
-                            .build(),
-                    HttpStatusCode.valueOf(201)
-            );
-
-    }
-
-    public ResponseEntity<Object> cancelarReservacionPorId(String codigo) throws EntityNotFoundException {
-        listaVuelos.clear();
-        // Obtener la lista de reservaciones
-        ReservacionModel reservacion = this.reservacionRepository.findByCodigoReservacion(codigo);
-
-        if (reservacion != null) {
-
-            Optional<ClienteModel> cliente = this.clienteRepository.findById(reservacion.getCliente().getIdCliente());
-
-            if (cliente.isPresent()){
-
-                if (reservacion.getVuelo1() != null){
-                    listaVuelos.add(reservacion.getVuelo1());
-                }
-
-                if (reservacion.getVuelo2() != null){
-
-                    listaVuelos.add(reservacion.getVuelo2());
-
-                    if (reservacion.getVuelo3() != null){
-                        listaVuelos.add(reservacion.getVuelo3());
-                    }
-                }
-
-                for (VueloModel vuelo: listaVuelos) {
-                    vuelo.setAsientos(vuelo.getAsientos() + reservacion.getNumeroAsientos());
-                    this.vueloService.actualizarVuelo(vuelo.getIdVuelo(), vuelo);
-                }
-
-                reservacionRepository.deleteById(reservacion.getIdReservacion());
-
-                datos = new HashMap<>();
-                datos.put("message", "la reserva se elimino con exito");
-
-                return new ResponseEntity<>(
-                        datos,
-                        HttpStatus.OK
-                );
-            }else{
-                throw new EntityNotFoundException("el usuario no esta registrado");
-
-            }
-
-        }
-
-        throw new EntityNotFoundException("No se encontraron reservaciones para eliminar");
-
-    }
+//    public ResponseEntity<Object> cancelarReservacionPorId(String codigo) throws EntityNotFoundException {
+//        listaVuelos.clear();
+//        // Obtener la lista de reservaciones
+//        ReservacionModel reservacion = this.reservacionRepository.findByCodigoReservacion(codigo);
+//
+//        if (reservacion != null) {
+//
+//            Optional<ClienteModel> cliente = this.clienteRepository.findById(reservacion.getCliente().getIdCliente());
+//
+//            if (cliente.isPresent()){
+//
+//                if (reservacion.getVuelo1() != null){
+//                    listaVuelos.add(reservacion.getVuelo1());
+//                }
+//
+//                if (reservacion.getVuelo2() != null){
+//
+//                    listaVuelos.add(reservacion.getVuelo2());
+//
+//                    if (reservacion.getVuelo3() != null){
+//                        listaVuelos.add(reservacion.getVuelo3());
+//                    }
+//                }
+//
+//                for (VueloModel vuelo: listaVuelos) {
+//                    vuelo.setAsientos(vuelo.getAsientos() + reservacion.getNumeroAsientos());
+//                    this.vueloService.actualizarVuelo(vuelo.getIdVuelo(), vuelo);
+//                }
+//
+//                reservacionRepository.deleteById(reservacion.getIdReservacion());
+//
+//                datos = new HashMap<>();
+//                datos.put("message", "la reserva se elimino con exito");
+//
+//                return new ResponseEntity<>(
+//                        datos,
+//                        HttpStatus.OK
+//                );
+//            }else{
+//                throw new EntityNotFoundException("el usuario no esta registrado");
+//
+//            }
+//
+//        }
+//
+//        throw new EntityNotFoundException("No se encontraron reservaciones para eliminar");
+//
+//    }
 
     private String generarCodigoReservacion() {
         return UUID.randomUUID().toString();

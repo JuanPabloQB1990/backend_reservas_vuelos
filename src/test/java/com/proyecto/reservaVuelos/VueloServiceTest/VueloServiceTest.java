@@ -7,6 +7,7 @@ import com.proyecto.reservaVuelos.models.AerolineaModel;
 import com.proyecto.reservaVuelos.models.AeropuertoModel;
 import com.proyecto.reservaVuelos.models.TipoVueloModel;
 import com.proyecto.reservaVuelos.models.VueloModel;
+import com.proyecto.reservaVuelos.repositories.AerolineaRepository;
 import com.proyecto.reservaVuelos.repositories.AeropuertoRepository;
 import com.proyecto.reservaVuelos.repositories.VueloRepository;
 import com.proyecto.reservaVuelos.services.VueloService;
@@ -32,6 +33,7 @@ public class VueloServiceTest {
     @Mock
     private VueloRepository vueloRepository;
     private AeropuertoRepository aeropuertoRepository;
+    private AerolineaRepository aerolineaRepository;
 
     @InjectMocks
     private VueloService vueloService;
@@ -71,7 +73,7 @@ public class VueloServiceTest {
     public void config(){
         this.vueloMapper = mock(VueloMapper.class);
         MockitoAnnotations.openMocks(this);
-        this.vueloService = new VueloService(this.vueloRepository, this.vueloMapper, this.aeropuertoRepository);
+        this.vueloService = new VueloService(this.vueloRepository, this.vueloMapper, this.aeropuertoRepository, this.aerolineaRepository);
         tipoVuelo = new TipoVueloModel(1L, "Publico");
         aerolinea = new AerolineaModel(1L, "Avianca");
         aeropuertoModel1 = new AeropuertoModel("MDE","Medellin","Aeropuerto Internacional Jose Maria Cordova","Colombia");
@@ -182,18 +184,18 @@ public class VueloServiceTest {
                 aerolinea
         );
 
-        vuelo8 = VueloModelDto.build(
-                1L,
-                "AV001",
-                aeropuertoModel15,
-                aeropuertoModel16,
-                LocalDateTime.of(2024,11,9,16,30),
-                LocalDateTime.of(2024,11,9,17,00),
-                5000,
-                200,
-                "Publico",
-                "Avianca"
-                );
+//        vuelo8 = VueloModelDto.build(
+//                1L,
+//                "AV001",
+//                aeropuertoModel15,
+//                aeropuertoModel16,
+//                LocalDateTime.of(2024,11,9,16,30),
+//                LocalDateTime.of(2024,11,9,17,00),
+//                5000,
+//                200,
+//                "Publico",
+//                "Avianca"
+//                );
 
     }
 

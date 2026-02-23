@@ -1,6 +1,7 @@
 package com.proyecto.reservaVuelos.controllers;
 
 import com.proyecto.reservaVuelos.dto.VueloModelDto;
+import com.proyecto.reservaVuelos.dto.VueloUpdateDto;
 import com.proyecto.reservaVuelos.excepcion.EntityNotFoundException;
 import com.proyecto.reservaVuelos.models.VueloModel;
 import com.proyecto.reservaVuelos.services.VueloService;
@@ -78,7 +79,7 @@ public class VueloController {
     ) {
 
         LocalDateTime fechaParseada = LocalDate.parse(fecha).atStartOfDay();
-
+        System.out.println(fechaParseada + "************************************************************************************************");
         List<?> vuelos = vueloService.buscarVuelosConEscalas(
                 origen,
                 destino,
@@ -91,7 +92,7 @@ public class VueloController {
 
     // *********************************************************** CREAR VUELOS ***************************************************** //
 
-    @Operation(summary = "Programar vuelos", security = {@SecurityRequirement(name= "BearerJWT")})
+    @Operation(summary = "Programar vuelos (los vuelos se programan automaticamente al arrancar el proyecto)", security = {@SecurityRequirement(name= "BearerJWT")})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "el vuelo se guardo con exito",
                     content = { @Content(mediaType = "application/json",
@@ -104,18 +105,20 @@ public class VueloController {
     }
 
     // *********************************************************** ACTUALIZAR VUELOS POR ID ***************************************************** //
+
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "el vuelo se actualizo con exito", content = @Content(schema = @Schema(implementation = ResponseEntity.class))),
             @ApiResponse(responseCode = "404", description = "el vuelo no se encuentra registrado",
                     content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
     })
-    @Operation(summary = "Actualizar o modificar un vuelo", security = {@SecurityRequirement(name= "BearerJWT")})
+    @Operation(summary = "Actualizar parcialmente un vuelo", security = {@SecurityRequirement(name= "BearerJWT")})
     @CrossOrigin(origins = "http://localhost:5173")
-    @PutMapping(path="vuelo/{idVuelo}")
-    public ResponseEntity<Object> actualizarVuelo(@PathVariable("idVuelo") Long idVuelo, @RequestBody @Valid VueloModel editVuelo) throws EntityNotFoundException {
+    @PatchMapping(path="vuelo/{idVuelo}")
+    public ResponseEntity<Object> actualizarVuelo(@PathVariable("idVuelo") Long idVuelo, @RequestBody @Valid VueloUpdateDto editVuelo) throws EntityNotFoundException {
         return this.vueloService.actualizarVuelo(idVuelo, editVuelo);
     }
 
+// *************************************** ELIMINAR VUELO POR ID ****************************************** //
 
 //    @ApiResponses(value = {
 //            @ApiResponse(responseCode = "204", description = "el vuelo se elimino con exito", content = @Content),

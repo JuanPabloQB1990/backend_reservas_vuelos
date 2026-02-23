@@ -37,33 +37,33 @@ public class ReservacionController {
         this.vueloService = vueloService;
     }
 
-    @Operation(summary = "Realizar reservas", security = {@SecurityRequirement(name= "BearerJWT")})
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "La reserva se realizo con exito",
-                    content = { @Content(mediaType = "application/json",
-                        schema = @Schema(implementation = CrearReservaDto.class))}),
-            @ApiResponse(responseCode = "404", description = "El cliente no esta registrado", content = @Content),
-            @ApiResponse(responseCode = "406", description = "No hay suficientes asientos disponibles para el vuelo ",
-                    content = @Content),
-            @ApiResponse(responseCode = "406", description = "La reserva debe realizarse con al menos 3 horas de anticipación.",
-                    content = @Content)})
-    @PostMapping(path = "/reservacion")
-    @CrossOrigin(origins = "http://localhost:5173")
-    public ResponseEntity<Object> crearReservacion(@RequestBody CrearReservaDto reserva) throws EntityNotFoundException {
-        return reservacionService.crearReservacion(reserva);
-    }
-
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "La reserva se elimino con exito", content = @Content),
-            @ApiResponse(responseCode = "404", description = "No se encontraron reservaciones para eliminar",
-                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
-    })
-    @Operation(summary = "Cancelar reserva por codigo de reserva", security = {@SecurityRequirement(name= "BearerJWT")})
-    @DeleteMapping("/reservacion/{codigo}")
-    @CrossOrigin(origins = "http://localhost:5173")
-    public ResponseEntity<Object> cancelarReservacionPorId(@PathVariable(name = "codigo") String codigo) throws EntityNotFoundException {
-        return this.reservacionService.cancelarReservacionPorId(codigo);
-    }
+//    @Operation(summary = "Realizar reservas", security = {@SecurityRequirement(name= "BearerJWT")})
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "201", description = "La reserva se realizo con exito",
+//                    content = { @Content(mediaType = "application/json",
+//                        schema = @Schema(implementation = CrearReservaDto.class))}),
+//            @ApiResponse(responseCode = "404", description = "El cliente no esta registrado", content = @Content),
+//            @ApiResponse(responseCode = "406", description = "No hay suficientes asientos disponibles para el vuelo ",
+//                    content = @Content),
+//            @ApiResponse(responseCode = "406", description = "La reserva debe realizarse con al menos 3 horas de anticipación.",
+//                    content = @Content)})
+//    @PostMapping(path = "/reservacion")
+//    @CrossOrigin(origins = "http://localhost:5173")
+//    public ResponseEntity<Object> crearReservacion(@RequestBody CrearReservaDto reserva) throws EntityNotFoundException {
+//        return reservacionService.crearReservacion(reserva);
+//    }
+//
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "204", description = "La reserva se elimino con exito", content = @Content),
+//            @ApiResponse(responseCode = "404", description = "No se encontraron reservaciones para eliminar",
+//                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
+//    })
+//    @Operation(summary = "Cancelar reserva por codigo de reserva", security = {@SecurityRequirement(name= "BearerJWT")})
+//    @DeleteMapping("/reservacion/{codigo}")
+//    @CrossOrigin(origins = "http://localhost:5173")
+//    public ResponseEntity<Object> cancelarReservacionPorId(@PathVariable(name = "codigo") String codigo) throws EntityNotFoundException {
+//        return this.reservacionService.cancelarReservacionPorId(codigo);
+//    }
 
     @Operation(summary = "Obtener reserva por id de reserva", security = {@SecurityRequirement(name= "BearerJWT")})
     @ResponseStatus(code = HttpStatus.NOT_FOUND)

@@ -40,7 +40,7 @@ public interface VueloRepository extends JpaRepository<VueloModel, Long> {
 
     @Query("""
         SELECT v FROM VueloModel v
-        WHERE TRIM(LOWER(v.origenId.ciudad)) = TRIM(LOWER(:origen))
+        WHERE TRIM(LOWER(v.origen.ciudad)) = TRIM(LOWER(:origen))
         AND v.fechaPartida >= :inicioDia
         AND v.fechaPartida < :finDia
         AND v.asientos >= :pasajeros
@@ -55,7 +55,7 @@ public interface VueloRepository extends JpaRepository<VueloModel, Long> {
 
     @Query("""
             SELECT v FROM VueloModel v
-            WHERE TRIM(LOWER(v.origenId.ciudad)) = TRIM(LOWER(:ciudad))
+            WHERE TRIM(LOWER(v.origen.ciudad)) = TRIM(LOWER(:ciudad))
             AND v.fechaPartida >= :min
             AND v.fechaPartida <= :max
             AND v.asientos >= :pasajeros
@@ -68,16 +68,16 @@ public interface VueloRepository extends JpaRepository<VueloModel, Long> {
             @Param("pasajeros") int pasajeros
     );
 
-    @Query("""
-            SELECT v FROM VueloModel v
-            WHERE LOWER(v.origenId.ciudad) = LOWER(:ciudad)
-            AND v.fechaPartida > :fecha
-            ORDER BY v.fechaPartida ASC
-            """)
-    List<VueloModel> buscarSiguientesTramos(
-            @Param("ciudad") String ciudad,
-            @Param("fecha") LocalDateTime fecha
-    );
+//    @Query("""
+//            SELECT v FROM VueloModel v
+//            WHERE LOWER(v.origenId.ciudad) = LOWER(:ciudad)
+//            AND v.fechaPartida > :fecha
+//            ORDER BY v.fechaPartida ASC
+//            """)
+//    List<VueloModel> buscarSiguientesTramos(
+//            @Param("ciudad") String ciudad,
+//            @Param("fecha") LocalDateTime fecha
+//    );
 
     @Transactional
     @Modifying
