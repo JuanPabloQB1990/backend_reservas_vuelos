@@ -5,7 +5,7 @@ Este proyecto simula el backend de una plataforma de viajes donde los usuarios p
 
 El objetivo del proyecto es practicar el desarrollo de APIs escalables, organización en capas y manejo de bases de datos en aplicaciones backend.
 
-## 🚀 Tecnologías utilizadas
+## 🚀 Tecnologías utilizadas:
 
 ✔️ Java
 ✔️ Spring Boot
@@ -15,7 +15,7 @@ El objetivo del proyecto es practicar el desarrollo de APIs escalables, organiza
 ✔️ REST API
 ✔️ Postman (testing)
 
-🧠 Características principales
+🧠 Características principales:
 
 ✔️ Gestión de vuelos
 ✔️ Creación de reservas
@@ -106,8 +106,6 @@ springdoc.api-docs.path=/api-docs
 mvn spring-boot:run
 ```
 
-Servidor disponible en:
-
-http://localhost:8080/api
+Servidor disponible en: http://localhost:8080/api
 
 Servidor Swagger en: http://localhost:8080/swagger-ui/index.html#/
