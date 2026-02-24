@@ -35,7 +35,6 @@ public class VueloController {
     private VueloService vueloService;
 
     // *********************************************************** OBTENER VUELO POR ID ***************************************************** //
-
     @Autowired
     public VueloController(VueloService vueloService) {
         this.vueloService = vueloService;
@@ -69,6 +68,8 @@ public class VueloController {
 
     // *********************************************************** OBTENER VUELOS POR ORIGEN - DESTINO - FECHA ***************************************************** //
 
+    @Operation(summary = "Obtener vuelos por fecha, pasajeros, origen y destino", security = {@SecurityRequirement(name= "BearerJWT")})
+    @ApiResponse(responseCode = "404", description = "no hay vuelos programados", content = @Content)
     @GetMapping("/buscar")
     public ResponseEntity<?> buscarVuelos(
 
@@ -76,10 +77,10 @@ public class VueloController {
             @RequestParam String destino,
             @RequestParam String fecha,
             @RequestParam int pasajeros
-    ) {
+    ) throws EntityNotFoundException {
 
         LocalDateTime fechaParseada = LocalDate.parse(fecha).atStartOfDay();
-        System.out.println(fechaParseada + "************************************************************************************************");
+
         List<?> vuelos = vueloService.buscarVuelosConEscalas(
                 origen,
                 destino,
@@ -91,25 +92,21 @@ public class VueloController {
     }
 
     // *********************************************************** CREAR VUELOS ***************************************************** //
-
     @Operation(summary = "Programar vuelos (los vuelos se programan automaticamente al arrancar el proyecto)", security = {@SecurityRequirement(name= "BearerJWT")})
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "el vuelo se guardo con exito",
-                    content = { @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = VueloModel.class))})
+            @ApiResponse(responseCode = "201", description = "Los vuelos se programaron con exito", content = @Content)
     })
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping(path = "vuelo", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> crearVuelo(){
+    public ResponseEntity<Object> crearVuelo() throws EntityNotFoundException {
         return this.vueloService.verificarVuelosAlInicio();
     }
 
     // *********************************************************** ACTUALIZAR VUELOS POR ID ***************************************************** //
 
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "el vuelo se actualizo con exito", content = @Content(schema = @Schema(implementation = ResponseEntity.class))),
-            @ApiResponse(responseCode = "404", description = "el vuelo no se encuentra registrado",
-                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
+            @ApiResponse(responseCode = "200", description = "el vuelo se actualizo con exito", content = @Content),
+            @ApiResponse(responseCode = "404", description = "el vuelo no se encuentra registrado",content = @Content)
     })
     @Operation(summary = "Actualizar parcialmente un vuelo", security = {@SecurityRequirement(name= "BearerJWT")})
     @CrossOrigin(origins = "http://localhost:5173")
@@ -118,19 +115,18 @@ public class VueloController {
         return this.vueloService.actualizarVuelo(idVuelo, editVuelo);
     }
 
-// *************************************** ELIMINAR VUELO POR ID ****************************************** //
+ // *************************************** ELIMINAR VUELO POR ID ****************************************** //
 
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "204", description = "el vuelo se elimino con exito", content = @Content),
-//            @ApiResponse(responseCode = "404", description = "El vuelo no se encuantra programado",
-//                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
-//    })
-//    @Operation(summary = "Eliminar vuelo por id", security = {@SecurityRequirement(name= "BearerJWT")})
-//    @CrossOrigin(origins = "http://localhost:5173")
-//    @DeleteMapping(path = "vuelo/{idVuelo}")
-//    public ResponseEntity<Object> eliminarVueloPorId(@PathVariable("idVuelo") Long idVuelo) throws EntityNotFoundException {
-//        return this.vueloService.eliminarVueloPorId(idVuelo);
-//    }
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "el vuelo se elimino con exito", content = @Content),
+            @ApiResponse(responseCode = "404", description = "El vuelo no se encuantra programado", content = @Content)
+    })
+    @Operation(summary = "Eliminar vuelo por id", security = {@SecurityRequirement(name= "BearerJWT")})
+    @CrossOrigin(origins = "http://localhost:5173")
+    @DeleteMapping(path = "vuelo/{idVuelo}")
+    public ResponseEntity<Object> eliminarVueloPorId(@PathVariable("idVuelo") Long idVuelo) throws EntityNotFoundException {
+        return this.vueloService.eliminarVueloPorId(idVuelo);
+    }
 
 
 

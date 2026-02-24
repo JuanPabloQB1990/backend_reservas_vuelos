@@ -3,10 +3,15 @@ package com.proyecto.reservaVuelos.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 
 @Getter
@@ -23,70 +28,27 @@ public class ReservacionModel {
 
     private String codigoReservacion;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "idVuelo1")
-    private VueloModel vuelo1;
-
-    @Nullable
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "idVuelo2")
-    private VueloModel vuelo2;
-
-    @Nullable
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "idVuelo3")
-    private VueloModel vuelo3;
-
     private LocalDateTime fechaReservacion;
 
-    private int numeroAsientos;
+    @NotNull(message = "El número de asientos es obligatorio")
+    @Min(value = 1, message = "Debe reservar al menos 1 asiento")
+    private Integer numeroAsientos;
 
-    @JsonIgnore
+    @Min(1)
+    private double total;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "idCliente")
+    @JoinColumn(name = "idCliente", nullable = false)  // clave FK
     private ClienteModel cliente;
 
-    public ReservacionModel(String codigoReservacion,
-                            VueloModel vuelo1,
-                            LocalDateTime fechaReservacion,
-                            int numeroAsientos,
-                            ClienteModel cliente) {
-        this.codigoReservacion = codigoReservacion;
-        this.vuelo1 = vuelo1;
-        this.fechaReservacion = fechaReservacion;
-        this.numeroAsientos = numeroAsientos;
-        this.cliente = cliente;
-    }
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "reservacion_vuelos",
+            joinColumns = @JoinColumn(name = "idReservacion"),
+            inverseJoinColumns = @JoinColumn(name = "idVuelo")
+    )
+    private List<VueloModel> vuelos = new ArrayList<>();
 
-    public ReservacionModel(String codigoReservacion,
-                            VueloModel vuelo1,
-                            VueloModel vuelo2,
-                            LocalDateTime fechaReservacion,
-                            int numeroAsientos,
-                            ClienteModel cliente) {
-        this.codigoReservacion = codigoReservacion;
-        this.vuelo1 = vuelo1;
-        this.vuelo2 = vuelo2;
-        this.fechaReservacion = fechaReservacion;
-        this.numeroAsientos = numeroAsientos;
-        this.cliente = cliente;
-    }
-
-    public ReservacionModel(String codigoReservacion,
-                            VueloModel vuelo1,
-                            VueloModel vuelo2,
-                            VueloModel vuelo3,
-                            LocalDateTime fechaReservacion,
-                            int numeroAsientos,
-                            ClienteModel cliente) {
-        this.codigoReservacion = codigoReservacion;
-        this.vuelo1 = vuelo1;
-        this.vuelo2 = vuelo2;
-        this.vuelo3 = vuelo3;
-        this.fechaReservacion = fechaReservacion;
-        this.numeroAsientos = numeroAsientos;
-        this.cliente = cliente;
-    }
-
-
+    @Enumerated(EnumType.STRING)
+    private EstadoReservacion estado;
 }

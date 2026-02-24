@@ -1,52 +1,32 @@
 package com.proyecto.reservaVuelos.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Schema(description = "Datos necesarios para realizar una reservación")
 public class CrearReservaDto {
 
-    private Long idVuelo1;
+    @Size(max = 5)
+    @Schema(description = "Lista de IDs de vuelos a reservar", example = "[12, 15]")
+    @NotEmpty(message = "Debe seleccionar al menos un vuelo")
+    private List<Long> vuelosIds;
 
-    //@Nullable
-    private Long idVuelo2;
+    @Schema(description = "Número de asientos a reservar", example = "2")
+    @Min(value = 1, message = "Debe reservar al menos 1 asiento")
+    @NotNull(message = "El número de asientos es obligatorio")
+    private Integer numeroAsientos;
 
-    //@Nullable
-    private Long idVuelo3;
-
-
-    private LocalDateTime fechaReserva;
-
-    @NotNull(message = "el numero de asientos a reservar son requeridos")
-    private int asientos;
-
-    @NotNull(message = "el id del cliente es requerido")
+    @Schema(description = "ID del cliente que realiza la reservación", example = "3")
+    @NotNull(message = "El id del cliente es requerido")
     private Long idCliente;
 
-    public CrearReservaDto(Long idVuelo1, int asientos, Long idCliente) {
-        this.idVuelo1 = idVuelo1;
-        this.asientos = asientos;
-        this.idCliente = idCliente;
-    }
-
-    public CrearReservaDto(Long idVuelo1, Long idVuelo2, int asientos, Long idCliente) {
-        this.idVuelo1 = idVuelo1;
-        this.idVuelo2 = idVuelo2;
-        this.asientos = asientos;
-        this.idCliente = idCliente;
-    }
-
-    public CrearReservaDto(Long idVuelo1, Long idVuelo2, Long idVuelo3, int asientos, Long idCliente) {
-        this.idVuelo1 = idVuelo1;
-        this.idVuelo2 = idVuelo2;
-        this.idVuelo3 = idVuelo3;
-        this.asientos = asientos;
-        this.idCliente = idCliente;
-    }
-
-    public CrearReservaDto() {
-    }
 }

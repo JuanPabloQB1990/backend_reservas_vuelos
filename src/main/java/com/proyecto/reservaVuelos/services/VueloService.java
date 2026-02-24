@@ -7,9 +7,11 @@ import com.proyecto.reservaVuelos.excepcion.EntityNotFoundException;
 import com.proyecto.reservaVuelos.mappers.VueloMapper;
 import com.proyecto.reservaVuelos.models.AerolineaModel;
 import com.proyecto.reservaVuelos.models.AeropuertoModel;
+import com.proyecto.reservaVuelos.models.TipoVueloModel;
 import com.proyecto.reservaVuelos.models.VueloModel;
 import com.proyecto.reservaVuelos.repositories.AerolineaRepository;
 import com.proyecto.reservaVuelos.repositories.AeropuertoRepository;
+import com.proyecto.reservaVuelos.repositories.TipoVueloRepository;
 import com.proyecto.reservaVuelos.repositories.VueloRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,9 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class VueloService {
@@ -33,18 +37,23 @@ public class VueloService {
     private VueloMapper vueloMapper;
     private final AeropuertoRepository aeropuertoRepository;
     private final AerolineaRepository aerolineaRepository;
+    private final TipoVueloRepository tipoVueloRepository;
 
     @Autowired
-    public VueloService(VueloRepository vueloRepository, VueloMapper vueloMapper, AeropuertoRepository aeropuertoRepository, AerolineaRepository aerolineaRepository) {
+    public VueloService(VueloRepository vueloRepository, VueloMapper vueloMapper, AeropuertoRepository aeropuertoRepository, AerolineaRepository aerolineaRepository, TipoVueloRepository tipoVueloRepository) {
         this.vueloRepository = vueloRepository;
         this.vueloMapper = vueloMapper;
         this.aeropuertoRepository = aeropuertoRepository;
         this.aerolineaRepository = aerolineaRepository;
+        this.tipoVueloRepository = tipoVueloRepository;
     }
 
     private HashMap<String, Object> datos;
 
     private static final int MAX_ESCALAS = 3;
+
+    private Map<String, Integer> secuenciaAerolinea = new HashMap<>();
+    private Set<String> codigosGenerados = new HashSet<>();
 
     public VueloModelDto obtenerVueloPorId(Long idVuelo) throws EntityNotFoundException {
 
@@ -157,7 +166,7 @@ public class VueloService {
             String destino,
             LocalDateTime fecha,
             int pasajeros
-    ) {
+    ) throws EntityNotFoundException {
 
         List<List<VueloModel>> resultados = new ArrayList<>();
 
@@ -196,165 +205,199 @@ public class VueloService {
             );
         }
 
-        // MAPEAR A DTO
-        return resultados.stream()
-                .map(ruta -> ruta.stream()
-                        .map(vueloMapper::toVueloDto)
-                        .toList())
-                .toList();
+        if (!resultados.isEmpty()){
+
+            // MAPEAR A DTO
+            return resultados.stream()
+                    .map(ruta -> ruta.stream()
+                            .map(vueloMapper::toVueloDto)
+                            .toList())
+                    .toList();
+        }else{
+            throw new EntityNotFoundException("no hay vuelos programados");
+        }
+
+
     }
     // ************************************* Crear y Actualizar vuelos ************************************************************************************
 
     @Scheduled(fixedDelay = 1800000) // 30 minutos
-    public ResponseEntity<Object> verificarVuelos() {
+    public ResponseEntity<Object> verificarVuelos() throws EntityNotFoundException {
 
         long total = vueloRepository.count();
 
         if (total == 0) {
-            return crearVuelo();
+            return crearVuelos();
         } else {
             return actualizarVuelosExpirados();
         }
     }
 
-    public ResponseEntity<Object> verificarVuelosAlInicio() {
+    public ResponseEntity<Object> verificarVuelosAlInicio() throws EntityNotFoundException {
 
         long total = vueloRepository.count();
 
         if (total == 0) {
-            return crearVuelo();
+            return crearVuelos();
         } else {
             return actualizarVuelosExpirados();
         }
     }
 
-    public ResponseEntity<Object> crearVuelo() {
+    public synchronized String generarCodigoVueloUnico(String nombreAerolinea) {
+
+        if (nombreAerolinea == null || nombreAerolinea.length() < 2) {
+            nombreAerolinea = "XX";
+        }
+
+        String prefijo = nombreAerolinea.substring(0, 2).toUpperCase();
+
+        int numero = secuenciaAerolinea.getOrDefault(prefijo, 1000);
+        String codigo = prefijo + numero;
+
+        while (codigosGenerados.contains(codigo)) {
+            numero++;
+            codigo = prefijo + numero;
+        }
+
+        secuenciaAerolinea.put(prefijo, numero + 1);
+        codigosGenerados.add(codigo);
+
+        return codigo;
+    }
+
+    public ResponseEntity<Object> crearVuelos() {
 
         Random random = new Random();
 
         List<AeropuertoModel> aeropuertos = aeropuertoRepository.findAll();
+        List<AeropuertoModel> hubs = aeropuertos.stream().limit(8).toList();
 
-        List<AeropuertoModel> hubs = aeropuertos.stream()
-                .limit(8)
-                .toList();
+        List<AerolineaModel> aerolineas = aerolineaRepository.findAll();
+
+        TipoVueloModel nacional = tipoVueloRepository.findById(1L).orElseThrow();
+        TipoVueloModel internacional = tipoVueloRepository.findById(2L).orElseThrow();
 
         int totalVuelos = 8000;
 
+        List<VueloModel> vuelosAGuardar = new ArrayList<>(totalVuelos * 2);
+
         for (int i = 0; i < totalVuelos; i++) {
 
+            // -------------------------
+            // ORIGEN Y DESTINO
+            // -------------------------
             AeropuertoModel origen;
             AeropuertoModel destino;
 
             int tipoRuta = random.nextInt(4);
 
-            // HUB -> HUB
-            if (tipoRuta == 0) {
+            switch (tipoRuta) {
 
-                origen = hubs.get(random.nextInt(hubs.size()));
+                case 0 -> { // HUB → HUB
+                    origen = hubs.get(random.nextInt(hubs.size()));
+                    do {
+                        destino = hubs.get(random.nextInt(hubs.size()));
+                    } while (origen.equals(destino));
+                }
 
-                do {
+                case 1 -> { // HUB → ciudad
+                    origen = hubs.get(random.nextInt(hubs.size()));
+                    do {
+                        destino = aeropuertos.get(random.nextInt(aeropuertos.size()));
+                    } while (origen.equals(destino));
+                }
+
+                case 2 -> { // ciudad → HUB
                     destino = hubs.get(random.nextInt(hubs.size()));
-                } while (origen.equals(destino));
-            }
+                    do {
+                        origen = aeropuertos.get(random.nextInt(aeropuertos.size()));
+                    } while (origen.equals(destino));
+                }
 
-            // HUB -> ciudad
-            else if (tipoRuta == 1) {
-
-                origen = hubs.get(random.nextInt(hubs.size()));
-
-                do {
-                    destino = aeropuertos.get(random.nextInt(aeropuertos.size()));
-                } while (origen.equals(destino));
-            }
-
-            // ciudad -> HUB
-            else if (tipoRuta == 2) {
-
-                destino = hubs.get(random.nextInt(hubs.size()));
-
-                do {
+                default -> { // ciudad → ciudad
                     origen = aeropuertos.get(random.nextInt(aeropuertos.size()));
-                } while (origen.equals(destino));
+                    do {
+                        destino = aeropuertos.get(random.nextInt(aeropuertos.size()));
+                    } while (origen.equals(destino));
+                }
             }
 
-            // ciudad -> ciudad
-            else {
-
-                origen = aeropuertos.get(random.nextInt(aeropuertos.size()));
-
-                do {
-                    destino = aeropuertos.get(random.nextInt(aeropuertos.size()));
-                } while (origen.equals(destino));
-            }
-
-            // día del vuelo
-            int dias = random.nextInt(25);
-
-            // bancos de conexiones
-            int banco = random.nextInt(4);
-
-            int horaBase;
-
-            switch (banco) {
-                case 0 -> horaBase = 6;
-                case 1 -> horaBase = 10;
-                case 2 -> horaBase = 14;
-                default -> horaBase = 18;
-            }
-
+            // -------------------------
+            // FECHAS (SIEMPRE FUTURO)
+            // -------------------------
             LocalDateTime salida = LocalDateTime.now()
-                    .plusDays(dias)
-                    .withHour(horaBase + random.nextInt(2))
-                    .withMinute(random.nextInt(60));
+                    .plusDays(random.nextInt(30) + 1)
+                    .plusHours(random.nextInt(18))
+                    .plusMinutes(random.nextInt(60));
 
             int duracion = 1 + random.nextInt(8);
 
             LocalDateTime llegada = salida.plusHours(duracion);
 
-            Long tipoVueloId = random.nextBoolean() ? 1L : 2L;
+            // -------------------------
+            // AEROLÍNEA
+            // -------------------------
+            AerolineaModel aerolinea = aerolineas.get(random.nextInt(aerolineas.size()));
 
-            Long aerolineaId = (long) (random.nextInt(7) + 1);
+            // -------------------------
+            // TIPO VUELO
+            // -------------------------
+            TipoVueloModel tipoVuelo = random.nextBoolean() ? nacional : internacional;
 
-            double precio;
-
-            if (tipoVueloId == 1)
-                precio = 60 + random.nextInt(120);
-            else
-                precio = 220 + random.nextInt(700);
+            // -------------------------
+            // PRECIO
+            // -------------------------
+            double precio = tipoVuelo.getIdTipoVuelo() == 1
+                    ? 60 + random.nextInt(120)
+                    : 220 + random.nextInt(700);
 
             int asientos = 90 + random.nextInt(180);
 
-            vueloRepository.crearVuelo(
-                    origen.getIdAeropuerto(),
-                    destino.getIdAeropuerto(),
-                    salida,
-                    llegada,
-                    precio,
-                    asientos,
-                    tipoVueloId,
-                    aerolineaId
-            );
+            // -------------------------
+            // VUELO IDA
+            // -------------------------
+            VueloModel vueloIda = new VueloModel();
 
-            // crear vuelo de regreso (muy importante)
+            vueloIda.setCodigoVuelo(generarCodigoVueloUnico(aerolinea.getNombre()));
+            vueloIda.setOrigen(origen);
+            vueloIda.setDestino(destino);
+            vueloIda.setFechaPartida(salida);
+            vueloIda.setFechaLlegada(llegada);
+            vueloIda.setPrecio(precio);
+            vueloIda.setAsientos(asientos);
+            vueloIda.setTipoVuelo(tipoVuelo);
+            vueloIda.setAerolinea(aerolinea);
+
+            vuelosAGuardar.add(vueloIda);
+
+            // -------------------------
+            // 50% PROBABILIDAD REGRESO
+            // -------------------------
             if (random.nextBoolean()) {
 
                 LocalDateTime regresoSalida = llegada.plusHours(1 + random.nextInt(3));
                 LocalDateTime regresoLlegada = regresoSalida.plusHours(duracion);
 
-                vueloRepository.crearVuelo(
-                        destino.getIdAeropuerto(),
-                        origen.getIdAeropuerto(),
-                        regresoSalida,
-                        regresoLlegada,
-                        precio,
-                        asientos,
-                        tipoVueloId,
-                        aerolineaId
-                );
+                VueloModel vueloRegreso = new VueloModel();
+
+                vueloRegreso.setCodigoVuelo(generarCodigoVueloUnico(aerolinea.getNombre()));
+                vueloRegreso.setOrigen(destino);
+                vueloRegreso.setDestino(origen);
+                vueloRegreso.setFechaPartida(regresoSalida);
+                vueloRegreso.setFechaLlegada(regresoLlegada);
+                vueloRegreso.setPrecio(precio);
+                vueloRegreso.setAsientos(asientos);
+                vueloRegreso.setTipoVuelo(tipoVuelo);
+                vueloRegreso.setAerolinea(aerolinea);
+
+                vuelosAGuardar.add(vueloRegreso);
             }
         }
 
-        return ResponseEntity.ok("Vuelos generados correctamente");
+        vueloRepository.saveAll(vuelosAGuardar);
+
+        return ResponseEntity.ok("Los vuelos se programaron con exito: " + vuelosAGuardar.size());
     }
 
     @Transactional

@@ -60,8 +60,11 @@ public class ClienteService {
         return new ResponseEntity(datos, HttpStatusCode.valueOf(201));
     }
 
+
     public ResponseEntity<AuthRespuestaDto> loguearCliente(LoginDto loginDto) throws EntityNotFoundException {
+
         Optional<ClienteModel> cliente = this.clienteRepository.findByUsername(loginDto.getUsername());
+
         if (cliente.isPresent()){
             UsernamePasswordAuthenticationToken userNamePassword = new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
             authenticationManager.authenticate(userNamePassword);

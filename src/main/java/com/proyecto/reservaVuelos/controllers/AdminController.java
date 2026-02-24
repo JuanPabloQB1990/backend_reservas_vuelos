@@ -1,6 +1,7 @@
 package com.proyecto.reservaVuelos.controllers;
 
 import com.proyecto.reservaVuelos.dto.CambiarRollDto;
+import com.proyecto.reservaVuelos.dto.ClienteModelDto;
 import com.proyecto.reservaVuelos.excepcion.EntityNotFoundException;
 import com.proyecto.reservaVuelos.models.ClienteModel;
 import com.proyecto.reservaVuelos.repositories.ClienteRepository;
@@ -21,30 +22,38 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(path = "api/admin")
 @CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET})
-@Tag(name = "administrador", description = "Catálogo para administrar roles de usuario")
+@Tag(name = "Administrador", description = "Catálogo para administrar usuarios")
 public class AdminController {
 
-    private AdminService adminService;
+    private final AdminService adminService;
 
     @Autowired
     public AdminController(AdminService adminService) {
         this.adminService = adminService;
     }
 
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Page.class))),
-            @ApiResponse(responseCode = "404", description = "no hay Usuarios registrados",
-                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
-    })
     @Operation(summary = "Obtener Usuario por ID", security = {@SecurityRequirement(name= "BearerJWT")})
+    @ApiResponse(responseCode = "404", description = "Persona no registrada", content = @Content)
     @GetMapping(path = "cliente/{idCliente}")
     @CrossOrigin(origins = "http://localhost:5173")
-    public ClienteModel obtenerCliente(@PathVariable Long idCliente){
+    public ClienteModelDto obtenerCliente(@PathVariable Long idCliente){
         return this.adminService.obtenerClientePorId(idCliente);
     }
 
-    @PutMapping(path = "cliente/{idCliente}")
-    public ResponseEntity<Object> modificarRolUsuario(@RequestBody CambiarRollDto rol, @PathVariable Long idCliente) throws EntityNotFoundException {
-        return this.adminService.modificarRolUsuario(rol, idCliente);
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = ClienteModelDto.class))),
+            @ApiResponse(responseCode = "404", description = "Persona no registrada",
+                    content = @Content(schema = @Schema(implementation = EntityNotFoundException.class))),
+    })
+    @Operation(summary = "Modificar Usuario por ID", security = {@SecurityRequirement(name= "BearerJWT")})
+    @PatchMapping("/cliente/{id}")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<ClienteModelDto> modificarClienteById(
+            @PathVariable Long id,
+            @RequestBody ClienteModelDto clienteDto) throws EntityNotFoundException {
+
+        ClienteModelDto clienteActualizado = adminService.modificarCliente(id, clienteDto);
+
+        return ResponseEntity.ok(clienteActualizado);
     }
 }

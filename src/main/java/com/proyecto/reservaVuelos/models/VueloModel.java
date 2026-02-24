@@ -44,7 +44,7 @@ public class VueloModel {
     private double precio;
 
     @Min(1)
-    private int asientos;
+    private Integer asientos;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idTipoVuelo")
@@ -53,6 +53,7 @@ public class VueloModel {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idAerolinea")
     private AerolineaModel aerolinea;
+
 
 
 }

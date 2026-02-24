@@ -56,11 +56,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/reservaciones/reservacion")
                         .hasAnyAuthority("EMPLEADO","ADMIN")
 
-                        .requestMatchers(HttpMethod.PATCH,"/api/vuelos/vuelo/**", "/api/aerolineas", "/api/tipo_vuelos")
+                        .requestMatchers(HttpMethod.PATCH,"/api/vuelos/vuelo/**", "/api/aerolineas", "/api/tipo_vuelos", "/api/admin/cliente/**")
                         .hasAnyAuthority("ADMIN")
 
                         .requestMatchers(HttpMethod.DELETE, "/api/reservaciones/reservacion")
                         .hasAnyAuthority("EMPLEADO","ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/reservaciones/reservacion")
+                        .hasAnyAuthority("EMPLEADO","ADMIN", "CLIENTE")
 
                         .requestMatchers(HttpMethod.DELETE,"/api/vuelos/vuelo/**", "/api/aerolineas", "/api/tipo_vuelos")
                         .hasAnyAuthority("ADMIN")

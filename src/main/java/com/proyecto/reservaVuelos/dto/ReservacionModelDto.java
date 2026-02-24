@@ -1,27 +1,36 @@
 package com.proyecto.reservaVuelos.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Schema(description = "Información de una reservación realizada por un cliente")
 public class ReservacionModelDto {
+    @Schema(description = "ID de la reservación", example = "15")
     private Long idReservacion;
-    private String codigoReservacion;
-    private List<VueloModelDto> vuelos;
-    private LocalDateTime fechaReservacion;
-    private int numAsientos;
-    private ClienteModelDto cliente;
 
-    public ReservacionModelDto(Long idReservacion, String codigoReservacion, List<VueloModelDto> vuelos, LocalDateTime fechaReservacion, int numAsientos, ClienteModelDto cliente) {
-        this.idReservacion = idReservacion;
-        this.codigoReservacion = codigoReservacion;
-        this.vuelos = vuelos;
-        this.fechaReservacion = fechaReservacion;
-        this.numAsientos = numAsientos;
-        this.cliente = cliente;
-    }
+    @Schema(description = "Código único de la reservación", example = "RSV48291")
+    private String codigoReservacion;
+
+    @Schema(description = "Fecha en que se realizó la reservación")
+    private LocalDateTime fechaReservacion;
+
+    @Schema(description = "Número de asientos reservados", example = "2")
+    private Integer asientos;
+
+    @Schema(description = "Costo total pagado por la reservación", example = "350.50")
+    private Double total;
+
+    @Schema(description = "Lista de vuelos incluidos en la reservación")
+    private List<VueloResumenDto> vuelos;
+
 }

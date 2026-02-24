@@ -92,6 +92,8 @@ public interface VueloRepository extends JpaRepository<VueloModel, Long> {
                          @Param("idTipoVuelo")Long idTipoVuelo,
                          @Param("idAerolinea")Long idAerolinea);
 
+    boolean existsByCodigoVuelo(String codigoVuelo);
+
     @Transactional
     @Modifying
     @Query(value = "{call insert_vuelo(:origenId, :destinoId, :fechaPartida, :fechaLlegada, :precio, :asientos, :idTipoVuelo, :idAerolinea)}", nativeQuery = true)
