@@ -40,8 +40,9 @@ cd backend_reservas_vuelos
 ## 2. Configurar base de datos
 
 Crear una base de datos en MySQL llamada:
-
-  -- reservas
+```js
+reservas
+```
 
 ## 3. Configura las variables a tu gusto te doy 2 opciones: 
 
@@ -59,31 +60,13 @@ Busca la sección Environment variables
 
 Haz clic en el ícono ...
 
-Agrega tus variables:
-
-### 2️⃣ Alternativa: usar .env
-
-Spring Boot no lo soporta directamente, pero puedes hacerlo con librerías como: dotenv-java
-
-copia y pega esta dependencia en archivo .pom.xml 
-Dependencia Maven:
+Agrega tus variables de entorno separadas por ; asi:
 
 ```js
-<dependency>
- <groupId>io.github.cdimascio</groupId>
- <artifactId>dotenv-java</artifactId>
- <version>3.0.0</version>
-</dependency>
+DB_USER=xxxxxxx;DB_PASSWORD=xxxxxxxxxxxxxx;SERVER_PORT=8090;SECRET_KEY=**********************************
 ```
 
-crea archivo .env en la raiz del proyecto y configura las variables asi.
-
-```js
-DB_USER=tu_user_db;
-DB_PASSWORD=tu_password_db;
-```
-
-## 4. Configurar el archivo: application.properties con tus variables definidas anteriormente.
+### 2️⃣ Configurar el archivo: application.properties con tus variables definidas anteriormente.
 
 Ejemplo:
 
@@ -98,9 +81,9 @@ spring.jpa.properties.hibernate.format_sql=true
 spring.datasource.username=${DB_USER}
 spring.datasource.password=${DB_PASSWORD}
 springdoc.api-docs.path=/api-docs
+SECRET_KEY=${SECRET_KEY}
 ```
-
-## 4. Ejecutar la aplicación en la consola con este comando o en Intellij IDEA.
+## 5. Ejecutar la aplicación en la consola con este comando o en Intellij IDEA.
 
 ```js
 mvn spring-boot:run
