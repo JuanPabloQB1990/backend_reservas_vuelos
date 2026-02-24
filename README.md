@@ -63,7 +63,7 @@ Haz clic en el ícono ...
 Agrega tus variables de entorno separadas por ; asi:
 
 ```js
-DB_USER=xxxxxxx;DB_PASSWORD=xxxxxxxxxxxxxx;SERVER_PORT=8090;SECRET_KEY=**********************************
+DB_USER=xxxxxxx;DB_PASSWORD=xxxxxxxxxxxxxx;SECRET_KEY=**********************************
 ```
 
 ### 2️⃣ Configurar el archivo: application.properties con tus variables definidas anteriormente.
