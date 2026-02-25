@@ -231,8 +231,8 @@ public class VueloServiceTest {
 
         LocalDateTime fecha = LocalDateTime.now();
 
-        AeropuertoModel bogota = new AeropuertoModel("Bogota","Colombia");
-        AeropuertoModel miami = new AeropuertoModel("Miami","USA");
+        AeropuertoModel bogota = new AeropuertoModel("BOG","Bogota","Aeropuerto Internacional El Dorado","Colombia");
+        AeropuertoModel miami = new AeropuertoModel("MIA","Miami","Miami International Airport","USA");
 
         VueloModel vuelo1 = new VueloModel();
         vuelo1.setOrigen(bogota);
