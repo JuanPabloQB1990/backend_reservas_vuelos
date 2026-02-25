@@ -71,7 +71,7 @@ public class VueloService {
         System.out.println(pageable);
         Page<VueloModel> vuelos = this.vueloRepository.findAll(pageable);
 
-        if (vuelos.getTotalElements() > 0){
+        if (!vuelos.isEmpty()){
             Page<VueloModelDto> vuelosDto = vuelos
                     .map(vuelo -> vueloMapper.toVueloDto(vuelo));
 

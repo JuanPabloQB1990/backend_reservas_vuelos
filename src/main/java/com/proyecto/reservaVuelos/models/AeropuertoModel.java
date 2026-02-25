@@ -22,7 +22,7 @@ public class AeropuertoModel {
     private String nombreAeropuerto;
     private String pais;
 
-    public AeropuertoModel(String codigo, String ciudad,String nombreAeropuerto, String pais) {
+    public AeropuertoModel(String codigo, String ciudad, String nombreAeropuerto, String pais) {
         this.codigo = codigo;
         this.ciudad = ciudad;
         this.pais = pais;
